@@ -11,7 +11,6 @@
         body { font-family: 'Inter', sans-serif; }
         .screen { display: none; }
         .screen.active { display: block; }
-        /* Animación para la aparición de elementos */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -21,126 +20,135 @@
 </head>
 <body class="bg-slate-50 text-slate-800">
 
-    <div id="app" class="max-w-2xl mx-auto p-4 md:p-6">
-
-        <!-- Cabecera y Navegación -->
-        <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
-            <div class="flex items-center gap-3">
-                <div class="bg-sky-500 text-white p-2 rounded-lg">
-                    <i class="fas fa-boxes-stacked"></i>
-                </div>
-                <h1 class="text-xl md:text-2xl font-bold text-slate-700">Gestión de Stock</h1>
+    <div id="app-container" class="max-w-2xl mx-auto p-4 md:p-6">
+        
+        <!-- Pantalla de Login -->
+        <div id="screen-login" class="screen active text-center pt-16">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm mx-auto">
+                <i class="fas fa-boxes-stacked text-5xl text-sky-500 mb-4"></i>
+                <h1 class="text-2xl font-bold text-slate-700 mb-2">Gestión de Stock</h1>
+                <p class="text-slate-500 mb-8">Inicia sesión para continuar.</p>
+                <button id="btn-login" class="w-full bg-red-500 text-white p-3 rounded-lg font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-3">
+                    <i class="fab fa-google"></i>
+                    <span>Iniciar sesión con Google</span>
+                </button>
+                <p id="login-error" class="text-red-500 text-sm mt-4 hidden"></p>
             </div>
-            <div id="nav-buttons">
-                 <button id="btn-ver-stock" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Ver Stock</button>
-                 <button id="btn-inicio" class="bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors hidden">Registrar Movimiento</button>
-            </div>
-        </header>
+        </div>
 
-        <!-- Contenedor de Pantallas -->
-        <main id="screens-container">
-
-            <!-- Pantalla 0: Inicio -->
-            <div id="screen-inicio" class="screen active">
-                <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una sección:</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button data-seccion="Guardería" class="seccion-btn bg-white p-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center">
-                        <i class="fas fa-child-reaching text-4xl text-teal-500 mb-3"></i>
-                        <span class="block text-xl font-bold">Guardería</span>
-                    </button>
-                    <button data-seccion="Resto de Alumnos" class="seccion-btn bg-white p-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center">
-                        <i class="fas fa-user-graduate text-4xl text-indigo-500 mb-3"></i>
-                        <span class="block text-xl font-bold">Resto de Alumnos</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Pantalla 1: Prendas -->
-            <div id="screen-prendas" class="screen">
-                <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver a Secciones</button>
-                <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una prenda:</h2>
-                <div id="prendas-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
-            </div>
-
-            <!-- Pantalla 2: Variantes -->
-            <div id="screen-variantes" class="screen">
-                <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver a Prendas</button>
-                <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una variante:</h2>
-                <div id="variantes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-            </div>
-
-            <!-- Pantalla 3: Tallas -->
-            <div id="screen-tallas" class="screen">
-                <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver</button>
-                <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una talla:</h2>
-                <div id="tallas-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
-            </div>
-
-            <!-- Pantalla 4: Acción -->
-            <div id="screen-accion" class="screen">
-                 <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver a Tallas</button>
-                 <div class="bg-white p-6 rounded-xl shadow-md">
-                    <h2 class="text-xl font-bold mb-1">Registrar Movimiento</h2>
-                    <p id="item-seleccionado" class="text-slate-500 mb-6"></p>
-
-                    <div class="mb-4">
-                        <label for="cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad</label>
-                        <input type="number" id="cantidad" min="1" value="1" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+        <!-- App Principal (oculta hasta el login) -->
+        <div id="app" class="hidden">
+            <!-- Cabecera y Navegación -->
+            <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="bg-sky-500 text-white p-2 rounded-lg">
+                        <i class="fas fa-boxes-stacked"></i>
                     </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold text-slate-700">Gestión de Stock</h1>
+                        <p id="user-email" class="text-xs text-slate-400"></p>
+                    </div>
+                </div>
+                <div id="nav-buttons" class="flex items-center gap-2">
+                     <button id="btn-ver-stock" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Ver Stock</button>
+                     <button id="btn-inicio" class="bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors hidden">Registrar</button>
+                     <button id="btn-logout" class="bg-slate-600 text-white w-10 h-10 rounded-lg font-semibold hover:bg-slate-700 transition-colors"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </header>
 
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Movimiento</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button id="btn-entrada" class="movimiento-tipo-btn p-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-semibold transition-all">
-                                <i class="fas fa-plus mr-2"></i>Entrada Almacén
-                            </button>
-                             <button id="btn-salida" class="movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold transition-all">
-                                <i class="fas fa-minus mr-2"></i>Salida a Tienda
-                            </button>
+            <!-- Contenedor de Pantallas -->
+            <main id="screens-container">
+                <!-- El resto de las pantallas de la app van aquí como antes -->
+                <div id="screen-inicio" class="screen active">
+                    <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una sección:</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button data-seccion="Guardería" class="seccion-btn bg-white p-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center">
+                            <i class="fas fa-child-reaching text-4xl text-teal-500 mb-3"></i>
+                            <span class="block text-xl font-bold">Guardería</span>
+                        </button>
+                        <button data-seccion="Resto de Alumnos" class="seccion-btn bg-white p-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center">
+                            <i class="fas fa-user-graduate text-4xl text-indigo-500 mb-3"></i>
+                            <span class="block text-xl font-bold">Resto de Alumnos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="screen-prendas" class="screen">
+                    <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver a Secciones</button>
+                    <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una prenda:</h2>
+                    <div id="prendas-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+                </div>
+
+                <div id="screen-variantes" class="screen">
+                    <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver a Prendas</button>
+                    <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una variante:</h2>
+                    <div id="variantes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+
+                <div id="screen-tallas" class="screen">
+                    <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver</button>
+                    <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una talla:</h2>
+                    <div id="tallas-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
+                </div>
+
+                <div id="screen-accion" class="screen">
+                     <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver a Tallas</button>
+                     <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-bold mb-1">Registrar Movimiento</h2>
+                        <p id="item-seleccionado" class="text-slate-500 mb-6"></p>
+                        <div class="mb-4">
+                            <label for="cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad</label>
+                            <input type="number" id="cantidad" min="1" value="1" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         </div>
-                    </div>
-                    
-                    <div id="destino-container" class="mb-6 hidden">
-                        <label for="destino" class="block text-sm font-medium text-slate-700 mb-1">Destino</label>
-                        <select id="destino" class="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                            <option value="tiendaVP">Tienda VP</option>
-                            <option value="tiendaPII">Tienda PII</option>
-                        </select>
-                    </div>
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Movimiento</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button id="btn-entrada" class="movimiento-tipo-btn p-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-semibold transition-all">
+                                    <i class="fas fa-plus mr-2"></i>Entrada Almacén
+                                </button>
+                                 <button id="btn-salida" class="movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold transition-all">
+                                    <i class="fas fa-minus mr-2"></i>Salida a Tienda
+                                </button>
+                            </div>
+                        </div>
+                        <div id="destino-container" class="mb-6 hidden">
+                            <label for="destino" class="block text-sm font-medium text-slate-700 mb-1">Destino</label>
+                            <select id="destino" class="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                <option value="tiendaVP">Tienda VP</option>
+                                <option value="tiendaPII">Tienda PII</option>
+                            </select>
+                        </div>
+                        <button id="btn-confirmar" class="w-full bg-sky-500 text-white p-4 rounded-lg font-bold text-lg hover:bg-sky-600 transition-transform transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed">Confirmar</button>
+                     </div>
+                </div>
 
-                    <button id="btn-confirmar" class="w-full bg-sky-500 text-white p-4 rounded-lg font-bold text-lg hover:bg-sky-600 transition-transform transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed">Confirmar</button>
-                 </div>
-            </div>
-
-            <!-- Pantalla 5: Vista de Stock -->
-            <div id="screen-stock" class="screen">
-                 <h2 class="text-2xl font-bold mb-4">Inventario Actual</h2>
-                 <div class="flex justify-between items-center mb-4">
-                    <input type="text" id="stock-search" placeholder="Buscar prenda..." class="p-2 border border-slate-300 rounded-lg w-1/2">
-                    <button id="btn-export-csv" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
-                        <i class="fas fa-file-excel mr-2"></i>Exportar a CSV
-                    </button>
-                 </div>
-                 <div class="overflow-x-auto bg-white rounded-lg shadow">
-                    <table class="w-full text-sm text-left text-slate-500">
-                        <thead class="text-xs text-slate-700 uppercase bg-slate-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">Prenda</th>
-                                <th scope="col" class="px-6 py-3 text-center">Almacén</th>
-                                <th scope="col" class="px-6 py-3 text-center">Tienda VP</th>
-                                <th scope="col" class="px-6 py-3 text-center">Tienda PII</th>
-                                <th scope="col" class="px-6 py-3 text-center font-bold">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stock-table-body">
-                           <!-- Las filas se insertarán aquí dinámicamente -->
-                           <tr><td colspan="5" class="text-center p-8"><i class="fas fa-spinner fa-spin text-2xl text-sky-500"></i><p class="mt-2">Cargando stock...</p></td></tr>
-                        </tbody>
-                    </table>
-                 </div>
-            </div>
-
-        </main>
+                <div id="screen-stock" class="screen">
+                     <h2 class="text-2xl font-bold mb-4">Inventario Actual</h2>
+                     <div class="flex justify-between items-center mb-4">
+                        <input type="text" id="stock-search" placeholder="Buscar prenda..." class="p-2 border border-slate-300 rounded-lg w-1/2">
+                        <button id="btn-export-csv" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            <i class="fas fa-file-excel mr-2"></i>Exportar a CSV
+                        </button>
+                     </div>
+                     <div class="overflow-x-auto bg-white rounded-lg shadow">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Prenda</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Almacén</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Tienda VP</th>
+                                    <th scope="col" class="px-6 py-3 text-center">Tienda PII</th>
+                                    <th scope="col" class="px-6 py-3 text-center font-bold">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-table-body">
+                               <tr><td colspan="5" class="text-center p-8"><i class="fas fa-spinner fa-spin text-2xl text-sky-500"></i><p class="mt-2">Cargando stock...</p></td></tr>
+                            </tbody>
+                        </table>
+                     </div>
+                </div>
+            </main>
+        </div>
 
         <!-- Modal de Confirmación -->
         <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
@@ -149,452 +157,351 @@
                      <i class="fas fa-check text-green-600 text-2xl"></i>
                 </div>
                 <h3 id="modal-title" class="text-lg font-medium text-slate-900">¡Hecho!</h3>
-                <p id="modal-message" class="text-sm text-slate-500 mt-2">El movimiento de stock ha sido registrado correctamente.</p>
+                <p id="modal-message" class="text-sm text-slate-500 mt-2"></p>
                 <button id="modal-close" class="mt-4 w-full bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold">Aceptar</button>
             </div>
         </div>
-
     </div>
 
     <script type="module">
-        // IMPORTANTE: Módulo de Firebase. No tocar.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, increment, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, increment, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- CONFIGURACIÓN DE FIREBASE ---
-        // Pega aquí la configuración de tu proyecto de Firebase
-        // La puedes encontrar en la configuración de tu proyecto > General
         const firebaseConfig = {
-  apiKey: "AIzaSyD1Zujz9sNiG7GYLkv5wUFWOPDIbF6DrBU",
-  authDomain: "stock-ropa.firebaseapp.com",
-  projectId: "stock-ropa",
-  storageBucket: "stock-ropa.firebasestorage.app",
-  messagingSenderId: "289770874193",
-  appId: "1:289770874193:web:37cb97c578bde1a1b89f70"
+          apiKey: "AIzaSyD1Zujz9sNiG7GYLkv5wUFWOPDIbF6DrBU",
+          authDomain: "stock-ropa.firebaseapp.com",
+          projectId: "stock-ropa",
+          storageBucket: "stock-ropa.appspot.com",
+          messagingSenderId: "289770874193",
+          appId: "1:289770874193:web:37cb97c578bde1a1b89f70"
         };
         
-        // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- DEFINICIÓN DE PRODUCTOS ---
-        // Esta es la estructura de datos que define todos los productos, variantes y tallas.
         const productos = {
-          "Guardería": {
-            "Babi": { tallas: ["00", "0", "1", "2", "3"] },
-            "Camiseta": {
-              "Manga Corta": { tallas: ["0", "1", "2", "3", "4", "6"] },
-              "Manga Larga": { tallas: ["00", "0", "1", "2", "3", "4"] }
-            },
-            "Pantalón": {
-              "Corto": { tallas: ["0", "1", "2", "3", "4", "6"] },
-              "Largo": { tallas: ["00", "0", "1", "2", "3", "4", "6"] }
-            },
-            "Malla": { tallas: ["00", "0", "1", "2", "3"] },
-            "Chaqueta": { tallas: ["00", "0", "1", "2", "3", "4"] },
-            "Chándal": { tallas: ["3", "4"] }
-          },
-          "Resto de Alumnos": {
-            "Pantalón mostaza": {
-              "Corto": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"] },
-              "Largo": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"] }
-            },
-            "Polo": {
-              "Manga Corta": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] },
-              "Manga Larga": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] }
-            },
-            "Falda": { tallas: ["2", "4", "6", "8", "10", "12", "14", "16", "18", "20 (S)", "22 (M)", "24 (L)", "26 (XL)", "48"] },
-            "Sueter": { tallas: ["2", "4", "6", "8", "10", "12", "14", "16", "18", "20 (S)", "22 (M)", "24 (L)", "26 (XL)"] },
-            "Babi infantil": { tallas: ["1", "2", "4", "6"] },
-            "Chándal": { tallas: ["1", "2", "3", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] },
-            "Sport": {
-              "Corto": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] },
-              "Largo": { tallas: ["2", "3", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] }
-            },
-            "Malla Sport": { tallas: ["12", "14", "16", "S", "M", "L", "XL", "XXL"] },
-            "Camiseta": {
-              "Manga Corta": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] },
-              "Manga Larga": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] }
-            },
-            "Sudadera": { tallas: ["XS", "S", "M", "L", "XL", "XXL", "XXXL"] },
-            "Leotardos": { tallas: ["4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL"] },
-            "Calcetines": { tallas: ["4", "6", "8", "10", "12", "14"] },
-            "Calcetas": { tallas: ["4", "6", "8", "10", "12", "14"] }
-          }
+          "Guardería": { "Babi": { tallas: ["00", "0", "1", "2", "3"] }, "Camiseta": { "Manga Corta": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Manga Larga": { tallas: ["00", "0", "1", "2", "3", "4"] } }, "Pantalón": { "Corto": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Largo": { tallas: ["00", "0", "1", "2", "3", "4", "6"] } }, "Malla": { tallas: ["00", "0", "1", "2", "3"] }, "Chaqueta": { tallas: ["00", "0", "1", "2", "3", "4"] }, "Chándal": { tallas: ["3", "4"] } },
+          "Resto de Alumnos": { "Pantalón mostaza": { "Corto": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"] }, "Largo": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"] } }, "Polo": { "Manga Corta": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] }, "Manga Larga": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] } }, "Falda": { tallas: ["2", "4", "6", "8", "10", "12", "14", "16", "18", "20 (S)", "22 (M)", "24 (L)", "26 (XL)", "48"] }, "Sueter": { tallas: ["2", "4", "6", "8", "10", "12", "14", "16", "18", "20 (S)", "22 (M)", "24 (L)", "26 (XL)"] }, "Babi infantil": { tallas: ["1", "2", "4", "6"] }, "Chándal": { tallas: ["1", "2", "3", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] }, "Sport": { "Corto": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] }, "Largo": { tallas: ["2", "3", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] } }, "Malla Sport": { tallas: ["12", "14", "16", "S", "M", "L", "XL", "XXL"] }, "Camiseta": { "Manga Corta": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] }, "Manga Larga": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] } }, "Sudadera": { tallas: ["XS", "S", "M", "L", "XL", "XXL", "XXXL"] }, "Leotardos": { tallas: ["4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL"] }, "Calcetines": { tallas: ["4", "6", "8", "10", "12", "14"] }, "Calcetas": { tallas: ["4", "6", "8", "10", "12", "14"] } }
         };
+        const iconosPrendas = { "Babi": "fas fa-shirt", "Camiseta": "fas fa-tshirt", "Pantalón": "fas fa-user-tie", "Malla": "fas fa-socks", "Chaqueta": "fas fa-user-secret", "Chándal": "fas fa-running", "Pantalón mostaza": "fas fa-user-tie", "Polo": "fas fa-tshirt", "Falda": "fas fa-female", "Sueter": "fas fa-user-ninja", "Babi infantil": "fas fa-child", "Sport": "fas fa-volleyball-ball", "Malla Sport": "fas fa-running", "Sudadera": "fas fa-user-secret", "Leotardos": "fas fa-socks", "Calcetines": "fas fa-socks", "Calcetas": "fas fa-socks", "default": "fas fa-tag" };
 
-        const iconosPrendas = {
-            "Babi": "fas fa-shirt",
-            "Camiseta": "fas fa-tshirt",
-            "Pantalón": "fas fa-user-tie", // Placeholder, find better icon
-            "Malla": "fas fa-socks", // Placeholder
-            "Chaqueta": "fas fa-user-secret", // Placeholder
-            "Chándal": "fas fa-running",
-            "Pantalón mostaza": "fas fa-user-tie",
-            "Polo": "fas fa-tshirt",
-            "Falda": "fas fa-female",
-            "Sueter": "fas fa-user-ninja",
-            "Babi infantil": "fas fa-child",
-            "Sport": "fas fa-volleyball-ball",
-            "Malla Sport": "fas fa-running",
-            "Sudadera": "fas fa-user-secret",
-            "Leotardos": "fas fa-socks",
-            "Calcetines": "fas fa-socks",
-            "Calcetas": "fas fa-socks",
-            "default": "fas fa-tag"
-        };
+        let seleccion = { seccion: null, prenda: null, variante: null, talla: null, historial: [] };
+        let stockData = [];
+        let unsubStockListener = null; // Variable para guardar la función de des-suscripción
 
-        // --- LÓGICA DE LA APLICACIÓN ---
+        const loginScreen = document.getElementById('screen-login');
+        const appElement = document.getElementById('app');
+        const btnLogin = document.getElementById('btn-login');
+        const btnLogout = document.getElementById('btn-logout');
+        const userEmailP = document.getElementById('user-email');
+        const loginErrorP = document.getElementById('login-error');
 
-        // Almacena el estado actual de la selección del usuario
-        let seleccion = {
-            seccion: null,
-            prenda: null,
-            variante: null,
-            talla: null,
-            historial: [] // Para gestionar la navegación hacia atrás
-        };
-        
-        let stockData = []; // Almacena todos los datos de stock para búsquedas y exportación
-
-        // Elementos del DOM
-        const screens = document.querySelectorAll('.screen');
-        const prendasGrid = document.getElementById('prendas-grid');
-        const variantesGrid = document.getElementById('variantes-grid');
-        const tallasGrid = document.getElementById('tallas-grid');
-        const itemSeleccionadoP = document.getElementById('item-seleccionado');
-        const cantidadInput = document.getElementById('cantidad');
-        const btnEntrada = document.getElementById('btn-entrada');
-        const btnSalida = document.getElementById('btn-salida');
-        const destinoContainer = document.getElementById('destino-container');
-        const destinoSelect = document.getElementById('destino');
-        const btnConfirmar = document.getElementById('btn-confirmar');
-        const modal = document.getElementById('modal');
-        const modalIcon = document.getElementById('modal-icon');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
-        const modalClose = document.getElementById('modal-close');
-        
-        // Navegación
-        const btnVerStock = document.getElementById('btn-ver-stock');
-        const btnInicio = document.getElementById('btn-inicio');
-        const stockSearchInput = document.getElementById('stock-search');
-        const btnExportCSV = document.getElementById('btn-export-csv');
-
-        // Función para cambiar de pantalla
-        function goToScreen(screenId) {
-            screens.forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            if(screenId !== 'screen-inicio') {
-                seleccion.historial.push(screenId);
-            }
-        }
-
-        // Función para volver a la pantalla anterior
-        function goBack() {
-            const currentScreen = seleccion.historial.pop();
-            const previousScreenId = seleccion.historial[seleccion.historial.length - 1] || 'screen-inicio';
-            
-            // Limpiar selección al retroceder
-            if (currentScreen === 'screen-prendas') seleccion.seccion = null;
-            if (currentScreen === 'screen-variantes' || currentScreen === 'screen-tallas') seleccion.prenda = null;
-            if (currentScreen === 'screen-tallas' && seleccion.variante) seleccion.variante = null;
-            if (currentScreen === 'screen-accion') seleccion.talla = null;
-
-            goToScreen(previousScreenId);
-        }
-
-        // --- RENDERIZADO DINÁMICO DE BOTONES ---
-
-        function renderPrendas(seccion) {
-            prendasGrid.innerHTML = '';
-            const prendas = productos[seccion];
-            for (const prendaNombre in prendas) {
-                const iconClass = iconosPrendas[prendaNombre] || iconosPrendas['default'];
-                const button = document.createElement('button');
-                button.className = 'prenda-btn bg-white p-4 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center fade-in';
-                button.dataset.prenda = prendaNombre;
-                button.innerHTML = `<i class="${iconClass} text-3xl text-slate-500 mb-2"></i><span class="block text-md font-semibold">${prendaNombre}</span>`;
-                prendasGrid.appendChild(button);
-            }
-        }
-
-        function renderVariantes(seccion, prenda) {
-            variantesGrid.innerHTML = '';
-            const variantes = productos[seccion][prenda];
-            for (const varianteNombre in variantes) {
-                if (varianteNombre !== 'tallas') {
-                    const button = document.createElement('button');
-                    button.className = 'variante-btn bg-white p-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center fade-in';
-                    button.dataset.variante = varianteNombre;
-                    button.innerHTML = `<span class="block text-lg font-semibold">${varianteNombre}</span>`;
-                    variantesGrid.appendChild(button);
+        // --- LÓGICA DE AUTENTICACIÓN ---
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email.endsWith('@virgendelpasico.net')) {
+                // Usuario logueado y del dominio correcto
+                loginScreen.classList.remove('active');
+                appElement.classList.remove('hidden');
+                userEmailP.textContent = user.email;
+                initApp();
+            } else {
+                // Usuario no logueado o no es del dominio
+                if (unsubStockListener) unsubStockListener(); // Detener el listener de stock si existe
+                loginScreen.classList.add('active');
+                appElement.classList.add('hidden');
+                if (user) { // Si está logueado pero no es del dominio correcto
+                    loginErrorP.textContent = 'Acceso denegado. Utiliza una cuenta de @virgendelpasico.net.';
+                    loginErrorP.classList.remove('hidden');
+                    signOut(auth); // Desloguear automáticamente
                 }
             }
-        }
+        });
 
-        function renderTallas(tallas) {
-            tallasGrid.innerHTML = '';
-            tallas.forEach(talla => {
-                const button = document.createElement('button');
-                button.className = 'talla-btn bg-white p-3 rounded-lg shadow-md hover:bg-sky-100 transition-all text-center font-semibold fade-in';
-                button.dataset.talla = talla;
-                button.textContent = talla;
-                tallasGrid.appendChild(button);
+        btnLogin.addEventListener('click', () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch(error => {
+                console.error("Error de login:", error);
+                loginErrorP.textContent = 'Error al iniciar sesión. Inténtalo de nuevo.';
+                loginErrorP.classList.remove('hidden');
             });
-        }
-        
-        // --- MANEJO DE EVENTOS ---
-        
-        document.body.addEventListener('click', (e) => {
-            // Botones de sección
-            if (e.target.closest('.seccion-btn')) {
-                seleccion.seccion = e.target.closest('.seccion-btn').dataset.seccion;
-                renderPrendas(seleccion.seccion);
-                goToScreen('screen-prendas');
-            }
-            // Botones de prenda
-            else if (e.target.closest('.prenda-btn')) {
-                seleccion.prenda = e.target.closest('.prenda-btn').dataset.prenda;
-                const item = productos[seleccion.seccion][seleccion.prenda];
-                // Si tiene variantes (ej. Manga Corta/Larga)
-                if (item['Manga Corta'] || item['Corto'] || item['Largo']) {
-                    renderVariantes(seleccion.seccion, seleccion.prenda);
-                    goToScreen('screen-variantes');
-                } else { // Si va directo a las tallas
-                    seleccion.variante = null;
-                    renderTallas(item.tallas);
-                    goToScreen('screen-tallas');
+        });
+
+        btnLogout.addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // --- LÓGICA DE LA APLICACIÓN (se inicializa tras login) ---
+        function initApp() {
+            const screens = document.querySelectorAll('.screen');
+            const prendasGrid = document.getElementById('prendas-grid');
+            const variantesGrid = document.getElementById('variantes-grid');
+            const tallasGrid = document.getElementById('tallas-grid');
+            const itemSeleccionadoP = document.getElementById('item-seleccionado');
+            const cantidadInput = document.getElementById('cantidad');
+            const btnEntrada = document.getElementById('btn-entrada');
+            const btnSalida = document.getElementById('btn-salida');
+            const destinoContainer = document.getElementById('destino-container');
+            const destinoSelect = document.getElementById('destino');
+            const btnConfirmar = document.getElementById('btn-confirmar');
+            const modal = document.getElementById('modal');
+            const modalIcon = document.getElementById('modal-icon');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const modalClose = document.getElementById('modal-close');
+            const btnVerStock = document.getElementById('btn-ver-stock');
+            const btnInicio = document.getElementById('btn-inicio');
+            const stockSearchInput = document.getElementById('stock-search');
+            const btnExportCSV = document.getElementById('btn-export-csv');
+
+            function goToScreen(screenId) {
+                screens.forEach(s => s.classList.remove('active'));
+                document.getElementById(screenId).classList.add('active');
+                if (screenId !== 'screen-inicio') {
+                    seleccion.historial.push(screenId);
                 }
             }
-            // Botones de variante
-            else if (e.target.closest('.variante-btn')) {
-                seleccion.variante = e.target.closest('.variante-btn').dataset.variante;
-                const tallas = productos[seleccion.seccion][seleccion.prenda][seleccion.variante].tallas;
-                renderTallas(tallas);
-                goToScreen('screen-tallas');
+
+            function goBack() {
+                const currentScreen = seleccion.historial.pop();
+                const previousScreenId = seleccion.historial[seleccion.historial.length - 1] || 'screen-inicio';
+                if (currentScreen === 'screen-prendas') seleccion.seccion = null;
+                if (currentScreen === 'screen-variantes' || currentScreen === 'screen-tallas') seleccion.prenda = null;
+                if (currentScreen === 'screen-tallas' && seleccion.variante) seleccion.variante = null;
+                if (currentScreen === 'screen-accion') seleccion.talla = null;
+                goToScreen(previousScreenId);
             }
-            // Botones de talla
-            else if (e.target.closest('.talla-btn')) {
-                seleccion.talla = e.target.closest('.talla-btn').dataset.talla;
-                let itemText = `${seleccion.prenda} - ${seleccion.talla}`;
-                if (seleccion.variante) {
-                    itemText = `${seleccion.prenda} (${seleccion.variante}) - ${seleccion.talla}`;
+
+            function renderPrendas(seccion) {
+                prendasGrid.innerHTML = '';
+                const prendas = productos[seccion];
+                for (const prendaNombre in prendas) {
+                    const iconClass = iconosPrendas[prendaNombre] || iconosPrendas['default'];
+                    const button = document.createElement('button');
+                    button.className = 'prenda-btn bg-white p-4 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center fade-in';
+                    button.dataset.prenda = prendaNombre;
+                    button.innerHTML = `<i class="${iconClass} text-3xl text-slate-500 mb-2"></i><span class="block text-md font-semibold">${prendaNombre}</span>`;
+                    prendasGrid.appendChild(button);
                 }
-                itemSeleccionadoP.textContent = itemText;
-                goToScreen('screen-accion');
-            }
-            // Botones de atrás
-            else if (e.target.closest('.back-btn')) {
-                goBack();
-            }
-        });
-
-        // Eventos de la pantalla de acción
-        let tipoMovimiento = 'entrada'; // Por defecto
-        btnEntrada.addEventListener('click', () => {
-            tipoMovimiento = 'entrada';
-            btnEntrada.classList.remove('border-slate-300', 'text-slate-500', 'bg-white');
-            btnEntrada.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
-            btnSalida.classList.add('border-slate-300', 'text-slate-500');
-            btnSalida.classList.remove('border-red-500', 'bg-red-50', 'text-red-700');
-            destinoContainer.classList.add('hidden');
-        });
-
-        btnSalida.addEventListener('click', () => {
-            tipoMovimiento = 'salida';
-            btnSalida.classList.remove('border-slate-300', 'text-slate-500', 'bg-white');
-            btnSalida.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
-            btnEntrada.classList.add('border-slate-300', 'text-slate-500');
-            btnEntrada.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
-            destinoContainer.classList.remove('hidden');
-        });
-
-        // Confirmar movimiento
-        btnConfirmar.addEventListener('click', async () => {
-            const cantidad = parseInt(cantidadInput.value);
-            if (!cantidad || cantidad < 1) {
-                showModal('Error', 'La cantidad debe ser un número mayor que cero.', 'error');
-                return;
             }
 
-            btnConfirmar.disabled = true;
-            btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
-
-            const docId = `${seleccion.seccion}_${seleccion.prenda}_${seleccion.variante || ''}_${seleccion.talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
-            const docRef = doc(db, "inventario", docId);
-            
-            try {
-                const docSnap = await getDoc(docRef);
-                let updateData = {};
-                
-                if (tipoMovimiento === 'entrada') {
-                    updateData.stockAlmacen = increment(cantidad);
-                } else {
-                    const destino = destinoSelect.value; // 'tiendaVP' o 'tiendaPII'
-                    updateData.stockAlmacen = increment(-cantidad);
-                    if (destino === 'tiendaVP') {
-                        updateData.stockVP = increment(cantidad);
-                    } else {
-                        updateData.stockPII = increment(cantidad);
+            function renderVariantes(seccion, prenda) {
+                variantesGrid.innerHTML = '';
+                const variantes = productos[seccion][prenda];
+                for (const varianteNombre in variantes) {
+                    if (varianteNombre !== 'tallas') {
+                        const button = document.createElement('button');
+                        button.className = 'variante-btn bg-white p-6 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center fade-in';
+                        button.dataset.variante = varianteNombre;
+                        button.innerHTML = `<span class="block text-lg font-semibold">${varianteNombre}</span>`;
+                        variantesGrid.appendChild(button);
                     }
                 }
-
-                // Si el documento no existe, lo creamos con los datos iniciales
-                if (!docSnap.exists()) {
-                    const initialData = {
-                        seccion: seleccion.seccion,
-                        prenda: seleccion.prenda,
-                        variante: seleccion.variante || '',
-                        talla: seleccion.talla,
-                        stockAlmacen: 0,
-                        stockVP: 0,
-                        stockPII: 0,
-                        ...updateData // Sobreescribimos con el primer movimiento
-                    };
-                    await setDoc(docRef, initialData);
-                } else {
-                    await setDoc(docRef, updateData, { merge: true });
-                }
-
-                showModal('¡Hecho!', 'El movimiento de stock ha sido registrado correctamente.');
-                resetApp();
-
-            } catch (error) {
-                console.error("Error al actualizar el documento: ", error);
-                showModal('Error', 'No se pudo registrar el movimiento. Revisa la conexión y la configuración de Firebase.', 'error');
-            } finally {
-                btnConfirmar.disabled = false;
-                btnConfirmar.textContent = 'Confirmar';
             }
-        });
-        
-        function resetApp() {
-            seleccion = { seccion: null, prenda: null, variante: null, talla: null, historial: [] };
-            cantidadInput.value = 1;
+
+            function renderTallas(tallas) {
+                tallasGrid.innerHTML = '';
+                tallas.forEach(talla => {
+                    const button = document.createElement('button');
+                    button.className = 'talla-btn bg-white p-3 rounded-lg shadow-md hover:bg-sky-100 transition-all text-center font-semibold fade-in';
+                    button.dataset.talla = talla;
+                    button.textContent = talla;
+                    tallasGrid.appendChild(button);
+                });
+            }
+
+            document.body.onclick = (e) => {
+                if (e.target.closest('.seccion-btn')) {
+                    seleccion.seccion = e.target.closest('.seccion-btn').dataset.seccion;
+                    renderPrendas(seleccion.seccion);
+                    goToScreen('screen-prendas');
+                } else if (e.target.closest('.prenda-btn')) {
+                    seleccion.prenda = e.target.closest('.prenda-btn').dataset.prenda;
+                    const item = productos[seleccion.seccion][seleccion.prenda];
+                    if (item['Manga Corta'] || item['Corto'] || item['Largo']) {
+                        renderVariantes(seleccion.seccion, seleccion.prenda);
+                        goToScreen('screen-variantes');
+                    } else {
+                        seleccion.variante = null;
+                        renderTallas(item.tallas);
+                        goToScreen('screen-tallas');
+                    }
+                } else if (e.target.closest('.variante-btn')) {
+                    seleccion.variante = e.target.closest('.variante-btn').dataset.variante;
+                    const tallas = productos[seleccion.seccion][seleccion.prenda][seleccion.variante].tallas;
+                    renderTallas(tallas);
+                    goToScreen('screen-tallas');
+                } else if (e.target.closest('.talla-btn')) {
+                    seleccion.talla = e.target.closest('.talla-btn').dataset.talla;
+                    let itemText = `${seleccion.prenda} - ${seleccion.talla}`;
+                    if (seleccion.variante) {
+                        itemText = `${seleccion.prenda} (${seleccion.variante}) - ${seleccion.talla}`;
+                    }
+                    itemSeleccionadoP.textContent = itemText;
+                    goToScreen('screen-accion');
+                } else if (e.target.closest('.back-btn')) {
+                    goBack();
+                }
+            };
+            
+            let tipoMovimiento = 'entrada';
+            btnEntrada.onclick = () => {
+                tipoMovimiento = 'entrada';
+                btnEntrada.classList.remove('border-slate-300', 'text-slate-500', 'bg-white');
+                btnEntrada.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                btnSalida.classList.add('border-slate-300', 'text-slate-500');
+                btnSalida.classList.remove('border-red-500', 'bg-red-50', 'text-red-700');
+                destinoContainer.classList.add('hidden');
+            };
+            btnSalida.onclick = () => {
+                tipoMovimiento = 'salida';
+                btnSalida.classList.remove('border-slate-300', 'text-slate-500', 'bg-white');
+                btnSalida.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
+                btnEntrada.classList.add('border-slate-300', 'text-slate-500');
+                btnEntrada.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
+                destinoContainer.classList.remove('hidden');
+            };
+
+            btnConfirmar.onclick = async () => {
+                const cantidad = parseInt(cantidadInput.value);
+                if (!cantidad || cantidad < 1) {
+                    showModal('Error', 'La cantidad debe ser un número mayor que cero.', 'error');
+                    return;
+                }
+                btnConfirmar.disabled = true;
+                btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+                const docId = `${seleccion.seccion}_${seleccion.prenda}_${seleccion.variante || ''}_${seleccion.talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
+                const docRef = doc(db, "inventario", docId);
+                try {
+                    const docSnap = await getDoc(docRef);
+                    let updateData = {};
+                    if (tipoMovimiento === 'entrada') {
+                        updateData.stockAlmacen = increment(cantidad);
+                    } else {
+                        const destino = destinoSelect.value;
+                        updateData.stockAlmacen = increment(-cantidad);
+                        if (destino === 'tiendaVP') {
+                            updateData.stockVP = increment(cantidad);
+                        } else {
+                            updateData.stockPII = increment(cantidad);
+                        }
+                    }
+                    if (!docSnap.exists()) {
+                        const initialData = {
+                            seccion: seleccion.seccion, prenda: seleccion.prenda, variante: seleccion.variante || '', talla: seleccion.talla,
+                            stockAlmacen: 0, stockVP: 0, stockPII: 0, ...updateData
+                        };
+                        await setDoc(docRef, initialData);
+                    } else {
+                        await setDoc(docRef, updateData, { merge: true });
+                    }
+                    showModal('¡Hecho!', 'El movimiento de stock ha sido registrado correctamente.');
+                    resetApp();
+                } catch (error) {
+                    console.error("Error al actualizar el documento: ", error);
+                    showModal('Error', 'No se pudo registrar el movimiento. Revisa la conexión y las reglas de seguridad de Firebase.', 'error');
+                } finally {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.textContent = 'Confirmar';
+                }
+            };
+            
+            function resetApp() {
+                seleccion = { seccion: null, prenda: null, variante: null, talla: null, historial: [] };
+                cantidadInput.value = 1;
+                goToScreen('screen-inicio');
+            }
+
+            function showModal(title, message, type = 'success') {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modalIcon.innerHTML = '';
+                if (type === 'success') {
+                    modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4';
+                    modalIcon.innerHTML = '<i class="fas fa-check text-green-600 text-2xl"></i>';
+                } else {
+                    modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    modalIcon.innerHTML = '<i class="fas fa-times text-red-600 text-2xl"></i>';
+                }
+                modal.classList.remove('hidden');
+            }
+            modalClose.onclick = () => modal.classList.add('hidden');
+
+            btnVerStock.onclick = () => {
+                goToScreen('screen-stock');
+                btnVerStock.classList.add('hidden');
+                btnInicio.classList.remove('hidden');
+            };
+            btnInicio.onclick = () => {
+                resetApp();
+                btnVerStock.classList.remove('hidden');
+                btnInicio.classList.add('hidden');
+            };
+            
+            function renderStockTable(data) {
+                const tableBody = document.getElementById('stock-table-body');
+                tableBody.innerHTML = '';
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8">No hay datos de stock. Empieza a registrar movimientos.</td></tr>';
+                    return;
+                }
+                data.sort((a, b) => {
+                    if (a.seccion < b.seccion) return -1; if (a.seccion > b.seccion) return 1;
+                    if (a.prenda < b.prenda) return -1; if (a.prenda > b.prenda) return 1;
+                    if (a.variante < b.variante) return -1; if (a.variante > b.variante) return 1;
+                    const tallaA = parseInt(a.talla); const tallaB = parseInt(b.talla);
+                    if (!isNaN(tallaA) && !isNaN(tallaB)) { return tallaA - tallaB; }
+                    return a.talla.localeCompare(b.talla);
+                });
+                data.forEach(item => {
+                    const total = item.stockAlmacen + item.stockVP + item.stockPII;
+                    const nombreCompleto = `${item.prenda} ${item.variante || ''} - Talla: ${item.talla}`;
+                    const row = `<tr class="bg-white border-b hover:bg-slate-50"><th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap"><span class="block">${nombreCompleto}</span><span class="block text-xs text-slate-400">${item.seccion}</span></th><td class="px-6 py-4 text-center">${item.stockAlmacen}</td><td class="px-6 py-4 text-center">${item.stockVP}</td><td class="px-6 py-4 text-center">${item.stockPII}</td><td class="px-6 py-4 text-center font-bold text-slate-800">${total}</td></tr>`;
+                    tableBody.innerHTML += row;
+                });
+            }
+            
+            if (unsubStockListener) unsubStockListener(); // Detener listener anterior si existe
+            unsubStockListener = onSnapshot(collection(db, "inventario"), (querySnapshot) => {
+                stockData = [];
+                querySnapshot.forEach((doc) => {
+                    stockData.push({ id: doc.id, ...doc.data() });
+                });
+                renderStockTable(stockData);
+            }, (error) => {
+                console.error("Error al obtener stock: ", error);
+                 document.getElementById('stock-table-body').innerHTML = '<tr><td colspan="5" class="text-center p-8 text-red-500">Error al cargar el stock. Revisa la configuración y las reglas de seguridad.</td></tr>';
+            });
+
+            stockSearchInput.oninput = (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredData = stockData.filter(item => {
+                    const nombreCompleto = `${item.seccion} ${item.prenda} ${item.variante || ''} ${item.talla}`.toLowerCase();
+                    return nombreCompleto.includes(searchTerm);
+                });
+                renderStockTable(filteredData);
+            };
+            
+            btnExportCSV.onclick = () => {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Seccion,Prenda,Variante,Talla,Stock Almacen,Stock Tienda VP,Stock Tienda PII,Total\n";
+                stockData.forEach(item => {
+                    const total = item.stockAlmacen + item.stockVP + item.stockPII;
+                    const row = [item.seccion, item.prenda, item.variante || '', item.talla, item.stockAlmacen, item.stockVP, item.stockPII, total].join(",");
+                    csvContent += row + "\n";
+                });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "inventario_cooperativa.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
             goToScreen('screen-inicio');
         }
-
-        // --- MODAL ---
-        function showModal(title, message, type = 'success') {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            
-            modalIcon.innerHTML = '';
-            if (type === 'success') {
-                modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4';
-                modalIcon.innerHTML = '<i class="fas fa-check text-green-600 text-2xl"></i>';
-            } else {
-                modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
-                modalIcon.innerHTML = '<i class="fas fa-times text-red-600 text-2xl"></i>';
-            }
-            
-            modal.classList.remove('hidden');
-        }
-        modalClose.addEventListener('click', () => modal.classList.add('hidden'));
-
-        // --- VISTA DE STOCK ---
-        btnVerStock.addEventListener('click', () => {
-            goToScreen('screen-stock');
-            btnVerStock.classList.add('hidden');
-            btnInicio.classList.remove('hidden');
-        });
-
-        btnInicio.addEventListener('click', () => {
-            resetApp();
-            btnVerStock.classList.remove('hidden');
-            btnInicio.classList.add('hidden');
-        });
-        
-        function renderStockTable(data) {
-            const tableBody = document.getElementById('stock-table-body');
-            tableBody.innerHTML = '';
-            
-            if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8">No hay datos de stock. Empieza a registrar movimientos.</td></tr>';
-                return;
-            }
-
-            // Ordenar datos
-            data.sort((a, b) => {
-                if (a.seccion < b.seccion) return -1;
-                if (a.seccion > b.seccion) return 1;
-                if (a.prenda < b.prenda) return -1;
-                if (a.prenda > b.prenda) return 1;
-                if (a.variante < b.variante) return -1;
-                if (a.variante > b.variante) return 1;
-                // Orden numérico para tallas si es posible
-                const tallaA = parseInt(a.talla);
-                const tallaB = parseInt(b.talla);
-                if (!isNaN(tallaA) && !isNaN(tallaB)) {
-                    return tallaA - tallaB;
-                }
-                return a.talla.localeCompare(b.talla);
-            });
-
-            data.forEach(item => {
-                const total = item.stockAlmacen + item.stockVP + item.stockPII;
-                const nombreCompleto = `${item.prenda} ${item.variante || ''} - Talla: ${item.talla}`;
-                const row = `
-                    <tr class="bg-white border-b hover:bg-slate-50">
-                        <th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
-                            <span class="block">${nombreCompleto}</span>
-                            <span class="block text-xs text-slate-400">${item.seccion}</span>
-                        </th>
-                        <td class="px-6 py-4 text-center">${item.stockAlmacen}</td>
-                        <td class="px-6 py-4 text-center">${item.stockVP}</td>
-                        <td class="px-6 py-4 text-center">${item.stockPII}</td>
-                        <td class="px-6 py-4 text-center font-bold text-slate-800">${total}</td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
-        
-        // Escuchar cambios en el stock en tiempo real
-        const unsub = onSnapshot(collection(db, "inventario"), (querySnapshot) => {
-            stockData = [];
-            querySnapshot.forEach((doc) => {
-                stockData.push({ id: doc.id, ...doc.data() });
-            });
-            renderStockTable(stockData);
-        }, (error) => {
-            console.error("Error al obtener stock: ", error);
-             document.getElementById('stock-table-body').innerHTML = '<tr><td colspan="5" class="text-center p-8 text-red-500">Error al cargar el stock. Revisa la configuración de Firebase y la conexión.</td></tr>';
-        });
-
-        // Filtrado en la tabla de stock
-        stockSearchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredData = stockData.filter(item => {
-                const nombreCompleto = `${item.seccion} ${item.prenda} ${item.variante || ''} ${item.talla}`.toLowerCase();
-                return nombreCompleto.includes(searchTerm);
-            });
-            renderStockTable(filteredData);
-        });
-        
-        // Exportar a CSV
-        btnExportCSV.addEventListener('click', () => {
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Seccion,Prenda,Variante,Talla,Stock Almacen,Stock Tienda VP,Stock Tienda PII,Total\n";
-
-            stockData.forEach(item => {
-                const total = item.stockAlmacen + item.stockVP + item.stockPII;
-                const row = [item.seccion, item.prenda, item.variante || '', item.talla, item.stockAlmacen, item.stockVP, item.stockPII, total].join(",");
-                csvContent += row + "\n";
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "inventario_cooperativa.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-
-        // Inicialización
-        goToScreen('screen-inicio');
     </script>
 </body>
 </html>
