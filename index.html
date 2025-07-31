@@ -26,6 +26,13 @@
             max-height: 1000px; /* Suficientemente grande para el contenido */
             opacity: 1;
         }
+        .prenda-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #e2e8f0;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -170,7 +177,31 @@
           "Guardería": { "Babi": { tallas: ["00", "0", "1", "2", "3"] }, "Camiseta": { "Manga Corta": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Manga Larga": { tallas: ["00", "0", "1", "2", "3", "4"] } }, "Pantalón": { "Corto": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Largo": { tallas: ["00", "0", "1", "2", "3", "4", "6"] } }, "Malla": { tallas: ["00", "0", "1", "2", "3"] }, "Chaqueta": { tallas: ["00", "0", "1", "2", "3", "4"] }, "Chándal": { tallas: ["3", "4"] } },
           "Resto de Alumnos": { "Pantalón mostaza": { "Corto": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"] }, "Largo": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"] } }, "Polo": { "Manga Corta": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] }, "Manga Larga": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] } }, "Falda": { tallas: ["2", "4", "6", "8", "10", "12", "14", "16", "18", "20 (S)", "22 (M)", "24 (L)", "26 (XL)", "48"] }, "Sueter": { tallas: ["2", "4", "6", "8", "10", "12", "14", "16", "18", "20 (S)", "22 (M)", "24 (L)", "26 (XL)"] }, "Babi infantil": { tallas: ["1", "2", "4", "6"] }, "Chándal": { tallas: ["1", "2", "3", "4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL", "XXL"] }, "Sport": { "Corto": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] }, "Largo": { tallas: ["2", "3", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] } }, "Malla Sport": { tallas: ["12", "14", "16", "S", "M", "L", "XL", "XXL"] }, "Camiseta": { "Manga Corta": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] }, "Manga Larga": { tallas: ["1", "2", "4", "6", "8", "10", "12", "14", "16", "18", "S", "M", "L", "XL", "XXL"] } }, "Sudadera": { tallas: ["XS", "S", "M", "L", "XL", "XXL", "XXXL"] }, "Leotardos": { tallas: ["4", "6", "8", "10", "12", "14", "16", "S", "M", "L", "XL"] }, "Calcetines": { tallas: ["4", "6", "8", "10", "12", "14"] }, "Calcetas": { tallas: ["4", "6", "8", "10", "12", "14"] } }
         };
-        const iconosPrendas = { "Babi": "fas fa-shirt", "Camiseta": "fas fa-tshirt", "Pantalón": "fas fa-user-tie", "Malla": "fas fa-socks", "Chaqueta": "fas fa-user-secret", "Chándal": "fas fa-running", "Pantalón mostaza": "fas fa-user-tie", "Polo": "fas fa-tshirt", "Falda": "fas fa-female", "Sueter": "fas fa-user-ninja", "Babi infantil": "fas fa-child", "Sport": "fas fa-volleyball-ball", "Malla Sport": "fas fa-running", "Sudadera": "fas fa-user-secret", "Leotardos": "fas fa-socks", "Calcetines": "fas fa-socks", "Calcetas": "fas fa-socks", "default": "fas fa-tag" };
+        
+        // ==================================================================
+        // ¡¡¡IMPORTANTE!!!
+        // Sube tus imágenes a un servicio como imgur.com y pega aquí las URLs.
+        // ==================================================================
+        const imagenesPrendas = {
+            "Babi": "https://drive.google.com/uc?id=1Aba5gFMmcgZFi5fQ6jazAlBGk4gbX3Vd",
+            "Camiseta": "https://i.imgur.com/example.png",
+            "Pantalón": "https://i.imgur.com/example.png",
+            "Malla": "https://i.imgur.com/example.png",
+            "Chaqueta": "https://i.imgur.com/example.png",
+            "Chándal": "https://i.imgur.com/example.png",
+            "Pantalón mostaza": "https://i.imgur.com/example.png",
+            "Polo": "https://i.imgur.com/example.png",
+            "Falda": "https://i.imgur.com/example.png",
+            "Sueter": "https://i.imgur.com/example.png",
+            "Babi infantil": "https://i.imgur.com/example.png",
+            "Sport": "https://i.imgur.com/example.png",
+            "Malla Sport": "https://i.imgur.com/example.png",
+            "Sudadera": "https://i.imgur.com/example.png",
+            "Leotardos": "https://i.imgur.com/example.png",
+            "Calcetines": "https://i.imgur.com/example.png",
+            "Calcetas": "https://i.imgur.com/example.png",
+            "default": "https://placehold.co/80x80/e2e8f0/4a5568?text=?"
+        };
 
         let seleccion = { seccion: null, prenda: null, variante: null, talla: null, destino: null };
         let stockData = [];
@@ -223,11 +254,11 @@
             prendasGrid.innerHTML = '';
             const prendas = productos[seccion];
             for (const prendaNombre in prendas) {
-                const iconClass = iconosPrendas[prendaNombre] || iconosPrendas['default'];
+                const imageUrl = imagenesPrendas[prendaNombre] || imagenesPrendas['default'];
                 const button = document.createElement('button');
-                button.className = 'prenda-btn bg-white p-4 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center fade-in';
+                button.className = 'prenda-btn bg-white p-4 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center fade-in';
                 button.dataset.prenda = prendaNombre;
-                button.innerHTML = `<i class="${iconClass} text-3xl text-slate-500 mb-2"></i><span class="block text-md font-semibold">${prendaNombre}</span>`;
+                button.innerHTML = `<img src="${imageUrl}" alt="${prendaNombre}" class="prenda-img mb-2"><span class="block text-md font-semibold">${prendaNombre}</span>`;
                 prendasGrid.appendChild(button);
             }
         }
