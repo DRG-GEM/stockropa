@@ -493,8 +493,10 @@
                         const stockDestinoKey = currentSelection.destino === 'tiendaVP' ? 'stockVP' : 'stockPII';
                         resumen = {
                             lugar: currentSelection.destino === 'tiendaVP' ? 'Tienda VP' : 'Tienda PII',
-                            stockAnterior: stockActual[stockDestinoKey] || 0,
-                            stockNuevo: (stockActual[stockDestinoKey] || 0) + cantidad
+                            stockAnteriorAlmacen: stockActual.stockAlmacen || 0,
+                            stockNuevoAlmacen: (stockActual.stockAlmacen || 0) - cantidad,
+                            stockAnteriorTienda: stockActual[stockDestinoKey] || 0,
+                            stockNuevoTienda: (stockActual[stockDestinoKey] || 0) + cantidad
                         };
                         datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) - cantidad;
                         datosActualizados[stockDestinoKey] = (stockActual[stockDestinoKey] || 0) + cantidad;
@@ -507,7 +509,6 @@
                     
                     transaction.set(docRef, finalData);
                     
-                    // Guardar en historial
                     const historyRef = doc(collection(db, HISTORY_COLLECTION));
                     transaction.set(historyRef, {
                         ...currentSelection,
@@ -556,14 +557,24 @@
                 ? `<span class="font-semibold text-red-600">SALIDA de ${cantidad}</span> unidades`
                 : `<span class="font-semibold text-green-600">ENTRADA de ${cantidad}</span> unidades`;
 
-            const summaryHTML = `
+            let summaryHTML = `
                 <p><strong>Prenda:</strong> ${itemDescription}</p>
                 <p><strong>Movimiento:</strong> ${movimiento}</p>
-                <hr class="my-2">
-                <p><strong>Lugar:</strong> ${resumen.lugar}</p>
-                <p><strong>Stock Anterior:</strong> ${resumen.stockAnterior}</p>
-                <p><strong>Stock Resultante:</strong> <span class="font-bold text-lg">${resumen.stockNuevo}</span></p>
-            `;
+                <hr class="my-2">`;
+            
+            if (esSalida) {
+                summaryHTML += `
+                    <p><strong>Almacén:</strong> ${resumen.stockAnteriorAlmacen} &rarr; <span class="font-bold text-lg">${resumen.stockNuevoAlmacen}</span></p>
+                    <p><strong>${resumen.lugar}:</strong> ${resumen.stockAnteriorTienda} &rarr; <span class="font-bold text-lg">${resumen.stockNuevoTienda}</span></p>
+                `;
+            } else {
+                 summaryHTML += `
+                    <p><strong>Lugar:</strong> ${resumen.lugar}</p>
+                    <p><strong>Stock Anterior:</strong> ${resumen.stockAnterior}</p>
+                    <p><strong>Stock Resultante:</strong> <span class="font-bold text-lg">${resumen.stockNuevo}</span></p>
+                `;
+            }
+
             showModal('Movimiento Registrado', summaryHTML, true);
         }
 
