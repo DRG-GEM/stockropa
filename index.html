@@ -168,7 +168,7 @@
         };
         const iconosPrendas = { "Babi": "fas fa-shirt", "Camiseta": "fas fa-tshirt", "Pantalón": "fas fa-user-tie", "Malla": "fas fa-socks", "Chaqueta": "fas fa-user-secret", "Chándal": "fas fa-running", "Pantalón mostaza": "fas fa-user-tie", "Polo": "fas fa-tshirt", "Falda": "fas fa-female", "Sueter": "fas fa-user-ninja", "Babi infantil": "fas fa-child", "Sport": "fas fa-volleyball-ball", "Malla Sport": "fas fa-running", "Sudadera": "fas fa-user-secret", "Leotardos": "fas fa-socks", "Calcetines": "fas fa-socks", "Calcetas": "fas fa-socks", "default": "fas fa-tag" };
 
-        let seleccion = { seccion: null, prenda: null, variante: null, talla: null };
+        let seleccion = { seccion: null, prenda: null, variante: null, talla: null, destino: null };
         let stockData = [];
 
         const screens = document.querySelectorAll('.screen');
@@ -242,9 +242,7 @@
             detailViewContainer.classList.remove('active');
             prendaSelector.classList.remove('hidden');
             detailStockDisplay.classList.add('hidden');
-            seleccion.prenda = null;
-            seleccion.variante = null;
-            seleccion.talla = null;
+            seleccion = { seccion: seleccion.seccion, prenda: null, variante: null, talla: null, destino: null };
         });
 
         function renderDetailView() {
@@ -257,7 +255,7 @@
             const hasVariants = !item.tallas;
             if (hasVariants) {
                 const variantKeys = Object.keys(item);
-                seleccion.variante = variantKeys[0]; // Seleccionar la primera por defecto
+                seleccion.variante = variantKeys[0];
                 variantsHTML = `
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-2">Variante</label>
@@ -288,11 +286,11 @@
                     </div>
                 </div>
                 <div id="detail-destino-container" class="hidden">
-                    <label for="detail-destino" class="block text-sm font-medium text-slate-700 mb-1">Destino</label>
-                    <select id="detail-destino" class="w-full p-3 border border-slate-300 rounded-lg bg-white">
-                        <option value="tiendaVP">Tienda VP</option>
-                        <option value="tiendaPII">Tienda PII</option>
-                    </select>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Destino</label>
+                    <div class="flex gap-2">
+                        <button class="destino-btn flex-1 p-2 rounded-lg border-2" data-destino="tiendaVP">Tienda VP</button>
+                        <button class="destino-btn flex-1 p-2 rounded-lg border-2" data-destino="tiendaPII">Tienda PII</button>
+                    </div>
                 </div>
                 <button id="detail-btn-confirmar" class="w-full bg-sky-500 text-white p-4 rounded-lg font-bold text-lg hover:bg-sky-600 disabled:bg-slate-300" disabled>Confirmar Movimiento</button>
             `;
@@ -304,7 +302,7 @@
             const { seccion, prenda, variante } = seleccion;
             const item = variante ? productos[seccion][prenda][variante] : productos[seccion][prenda];
             const tallasGrid = document.getElementById('detail-tallas-grid');
-            tallasGrid.innerHTML = ''; // Clear existing buttons
+            tallasGrid.innerHTML = ''; 
 
             item.tallas.forEach(talla => {
                 const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
@@ -341,7 +339,6 @@
                     tallaBtn.classList.add('bg-sky-100', 'border-sky-500');
                     seleccion.talla = tallaBtn.dataset.talla;
                     
-                    // Update and show stock display
                     stockNumberSpan.textContent = tallaBtn.dataset.stock;
                     detailStockDisplay.classList.remove('hidden');
 
@@ -352,11 +349,24 @@
                     document.getElementById('detail-btn-entrada').classList.add('border-green-500', 'bg-green-50', 'text-green-700');
                     document.getElementById('detail-btn-salida').classList.remove('border-red-500', 'bg-red-50', 'text-red-700');
                     document.getElementById('detail-destino-container').classList.add('hidden');
+                    seleccion.destino = null;
                 }
                 if (e.target.closest('#detail-btn-salida')) {
                     document.getElementById('detail-btn-salida').classList.add('border-red-500', 'bg-red-50', 'text-red-700');
                     document.getElementById('detail-btn-entrada').classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
-                    document.getElementById('detail-destino-container').classList.remove('hidden');
+                    const destinoContainer = document.getElementById('detail-destino-container');
+                    destinoContainer.classList.remove('hidden');
+                    // Select first destination by default
+                    const firstDestinoBtn = destinoContainer.querySelector('.destino-btn');
+                    firstDestinoBtn.classList.add('bg-sky-100', 'border-sky-500');
+                    seleccion.destino = firstDestinoBtn.dataset.destino;
+                }
+                // Seleccionar Destino
+                const destinoBtn = e.target.closest('.destino-btn');
+                if (destinoBtn) {
+                    document.querySelectorAll('.destino-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
+                    destinoBtn.classList.add('bg-sky-100', 'border-sky-500');
+                    seleccion.destino = destinoBtn.dataset.destino;
                 }
                 // Confirmar
                 if (e.target.matches('#detail-btn-confirmar')) {
@@ -387,9 +397,14 @@
                 if (!esSalida) {
                     updateData.stockAlmacen = increment(cantidad);
                 } else {
-                    const destino = document.getElementById('detail-destino').value;
+                    if (!seleccion.destino) {
+                        showModal('Error', 'Debes seleccionar un destino para la salida.', 'error');
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = 'Confirmar Movimiento';
+                        return;
+                    }
                     updateData.stockAlmacen = increment(-cantidad);
-                    updateData[destino === 'tiendaVP' ? 'stockVP' : 'stockPII'] = increment(cantidad);
+                    updateData[seleccion.destino === 'tiendaVP' ? 'stockVP' : 'stockPII'] = increment(cantidad);
                 }
 
                 if (!docSnap.exists()) {
@@ -409,13 +424,15 @@
                 console.error("Error al actualizar el documento: ", error);
                 showModal('Error', 'No se pudo registrar el movimiento.', 'error');
             } finally {
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = 'Confirmar Movimiento';
+                if (!esSalida || seleccion.destino) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = 'Confirmar Movimiento';
+                }
             }
         }
         
         function resetApp() {
-            seleccion = { seccion: null, prenda: null, variante: null, talla: null };
+            seleccion = { seccion: null, prenda: null, variante: null, talla: null, destino: null };
             seccionSelector.classList.remove('hidden');
             prendaSelector.classList.add('hidden');
             detailViewContainer.classList.remove('active');
