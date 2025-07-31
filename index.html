@@ -131,15 +131,19 @@
 
         </main>
 
-        <!-- Modal de Confirmación -->
+        <!-- Modal de Resumen -->
         <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-lg shadow-xl p-6 text-center max-w-sm mx-auto">
-                <div id="modal-icon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                     <i class="fas fa-check text-green-600 text-2xl"></i>
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-auto">
+                <div class="flex items-center gap-3 mb-4">
+                    <div id="modal-icon" class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                         <i class="fas fa-check text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 id="modal-title" class="text-lg font-medium text-slate-900">Movimiento Registrado</h3>
                 </div>
-                <h3 id="modal-title" class="text-lg font-medium text-slate-900">¡Hecho!</h3>
-                <p id="modal-message" class="text-sm text-slate-500 mt-2"></p>
-                <button id="modal-close" class="mt-4 w-full bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold">Aceptar</button>
+                <div id="modal-summary" class="text-sm text-left space-y-2">
+                    <!-- El contenido del resumen se insertará aquí -->
+                </div>
+                <button id="modal-close" class="mt-6 w-full bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold">Aceptar</button>
             </div>
         </div>
 
@@ -147,7 +151,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, increment, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyD1Zujz9sNiG7GYLkv5wUFWOPDIbF6DrBU",
@@ -175,7 +179,7 @@
         const modal = document.getElementById('modal');
         const modalIcon = document.getElementById('modal-icon');
         const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
+        const modalSummary = document.getElementById('modal-summary');
         const modalClose = document.getElementById('modal-close');
         
         // Elementos de Navegación y Pantallas
@@ -383,7 +387,7 @@
         async function handleConfirmClick() {
             const cantidad = parseInt(document.getElementById('detail-cantidad').value);
             if (!cantidad || cantidad < 1) {
-                showModal('Error', 'La cantidad debe ser un número mayor que cero.', 'error');
+                showModal('Error', 'La cantidad debe ser un número mayor que cero.', false);
                 return;
             }
             const confirmBtn = document.getElementById('detail-btn-confirmar');
@@ -391,43 +395,53 @@
             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
             
             const esSalida = document.getElementById('detail-btn-salida').classList.contains('border-red-500');
-            
             const docId = `${seleccion.seccion}_${seleccion.prenda}_${seleccion.variante || ''}_${seleccion.talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
             const docRef = doc(db, SECRET_KEY, docId);
             
             try {
                 const docSnap = await getDoc(docRef);
-                let updateData = {};
+                const stockActual = docSnap.exists() ? docSnap.data() : { stockAlmacen: 0, stockVP: 0, stockPII: 0 };
                 
+                let datosActualizados = { ...stockActual };
+                let resumen = {};
+
                 if (!esSalida) {
-                    updateData.stockAlmacen = increment(cantidad);
+                    resumen = {
+                        lugar: 'Almacén',
+                        stockAnterior: stockActual.stockAlmacen || 0,
+                        stockNuevo: (stockActual.stockAlmacen || 0) + cantidad
+                    };
+                    datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) + cantidad;
                 } else {
                     if (!seleccion.destino) {
-                        showModal('Error', 'Debes seleccionar un destino para la salida.', 'error');
+                        showModal('Error', 'Debes seleccionar un destino para la salida.', false);
                         confirmBtn.disabled = false;
                         confirmBtn.innerHTML = 'Confirmar Movimiento';
                         return;
                     }
-                    updateData.stockAlmacen = increment(-cantidad);
-                    updateData[seleccion.destino === 'tiendaVP' ? 'stockVP' : 'stockPII'] = increment(cantidad);
-                }
-
-                if (!docSnap.exists()) {
-                    const initialData = {
-                        seccion: seleccion.seccion, prenda: seleccion.prenda, variante: seleccion.variante || '', talla: seleccion.talla,
-                        stockAlmacen: 0, stockVP: 0, stockPII: 0, ...updateData
+                    const stockDestinoKey = seleccion.destino === 'tiendaVP' ? 'stockVP' : 'stockPII';
+                    resumen = {
+                        lugar: seleccion.destino === 'tiendaVP' ? 'Tienda VP' : 'Tienda PII',
+                        stockAnterior: stockActual[stockDestinoKey] || 0,
+                        stockNuevo: (stockActual[stockDestinoKey] || 0) + cantidad
                     };
-                    await setDoc(docRef, initialData);
-                } else {
-                    await setDoc(docRef, updateData, { merge: true });
+                    datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) - cantidad;
+                    datosActualizados[stockDestinoKey] = (stockActual[stockDestinoKey] || 0) + cantidad;
                 }
 
-                showModal('¡Hecho!', 'El movimiento de stock ha sido registrado correctamente.');
+                const finalData = {
+                    seccion: seleccion.seccion, prenda: seleccion.prenda, variante: seleccion.variante || '', talla: seleccion.talla,
+                    ...datosActualizados
+                };
+                
+                await setDoc(docRef, finalData);
+
+                showSummaryModal(cantidad, esSalida, resumen);
                 resetApp();
 
             } catch (error) {
                 console.error("Error al actualizar el documento: ", error);
-                showModal('Error', 'No se pudo registrar el movimiento.', 'error');
+                showModal('Error', 'No se pudo registrar el movimiento.', false);
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = 'Confirmar Movimiento';
             }
@@ -442,19 +456,34 @@
             goToScreen('screen-registro');
         }
 
-        function showModal(title, message, type = 'success') {
+        function showModal(title, summaryHTML, isSuccess = true) {
             modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modalIcon.innerHTML = '';
-            if (type === 'success') {
-                modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4';
-                modalIcon.innerHTML = '<i class="fas fa-check text-green-600 text-2xl"></i>';
-            } else {
-                modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
-                modalIcon.innerHTML = '<i class="fas fa-times text-red-600 text-2xl"></i>';
-            }
+            modalSummary.innerHTML = summaryHTML;
+            modalIcon.innerHTML = isSuccess 
+                ? '<i class="fas fa-check text-green-600 text-2xl"></i>' 
+                : '<i class="fas fa-times text-red-600 text-2xl"></i>';
+            modalIcon.className = `flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${isSuccess ? 'bg-green-100' : 'bg-red-100'}`;
             modal.classList.remove('hidden');
         }
+
+        function showSummaryModal(cantidad, esSalida, resumen) {
+            const { prenda, variante, talla } = seleccion;
+            const itemDescription = `${prenda} ${variante || ''} (Talla: ${talla})`;
+            const movimiento = esSalida 
+                ? `<span class="font-semibold text-red-600">SALIDA de ${cantidad}</span> unidades`
+                : `<span class="font-semibold text-green-600">ENTRADA de ${cantidad}</span> unidades`;
+
+            const summaryHTML = `
+                <p><strong>Prenda:</strong> ${itemDescription}</p>
+                <p><strong>Movimiento:</strong> ${movimiento}</p>
+                <hr class="my-2">
+                <p><strong>Lugar:</strong> ${resumen.lugar}</p>
+                <p><strong>Stock Anterior:</strong> ${resumen.stockAnterior}</p>
+                <p><strong>Stock Resultante:</strong> <span class="font-bold text-lg">${resumen.stockNuevo}</span></p>
+            `;
+            showModal('Movimiento Registrado', summaryHTML, true);
+        }
+
         modalClose.addEventListener('click', () => modal.classList.add('hidden'));
 
         // Navegación principal
@@ -587,7 +616,7 @@
                 showModal('¡Guardado!', 'El stock se ha actualizado correctamente.');
             } catch (error) {
                 console.error("Error en carga masiva: ", error);
-                showModal('Error', 'No se pudo guardar el stock.', 'error');
+                showModal('Error', 'No se pudo guardar el stock.', false);
             } finally {
                 btnBulkSave.disabled = false;
                 btnBulkSave.innerHTML = 'Guardar Cambios';
