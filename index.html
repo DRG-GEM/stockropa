@@ -360,7 +360,6 @@
                 <button id="detail-btn-confirmar" class="w-full bg-sky-500 text-white p-4 rounded-lg font-bold text-lg hover:bg-sky-600 disabled:bg-slate-300" disabled>Confirmar Movimiento</button>
             `;
             renderDetailTallas();
-            addDetailListeners();
         }
 
         function renderDetailTallas() {
@@ -385,76 +384,73 @@
                 tallasGrid.innerHTML += buttonHTML;
             });
         }
+        
+        document.body.addEventListener('click', (e) => {
+            const confirmBtn = document.getElementById('detail-btn-confirmar');
+            const entradaBtn = document.getElementById('detail-btn-entrada');
+            const salidaBtn = document.getElementById('detail-btn-salida');
+            const destinoContainer = document.getElementById('detail-destino-container');
 
-        function addDetailListeners() {
-            detailOptions.addEventListener('click', (e) => {
-                const confirmBtn = document.getElementById('detail-btn-confirmar');
-                const entradaBtn = document.getElementById('detail-btn-entrada');
-                const salidaBtn = document.getElementById('detail-btn-salida');
-                const destinoContainer = document.getElementById('detail-destino-container');
+            // Seleccionar Variante
+            if (e.target.matches('.variant-btn')) {
+                document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
+                e.target.classList.add('bg-sky-100', 'border-sky-500');
+                seleccion.variante = e.target.dataset.variante;
+                seleccion.talla = null;
+                confirmBtn.disabled = true;
+                detailStockDisplay.classList.add('hidden');
+                renderDetailTallas();
+            }
+            // Seleccionar Talla
+            const tallaBtn = e.target.closest('.detail-talla-btn');
+            if (tallaBtn) {
+                document.querySelectorAll('.detail-talla-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
+                tallaBtn.classList.add('bg-sky-100', 'border-sky-500');
+                seleccion.talla = tallaBtn.dataset.talla;
+                
+                const stockValue = parseInt(tallaBtn.dataset.stock);
+                stockNumberSpan.textContent = stockValue;
+                detailStockDisplay.classList.remove('hidden');
+                
+                detailStockDisplay.classList.remove('bg-sky-100', 'text-sky-700', 'bg-red-100', 'text-red-700');
+                if (stockValue < 10) {
+                    detailStockDisplay.classList.add('bg-red-100', 'text-red-700');
+                } else {
+                    detailStockDisplay.classList.add('bg-sky-100', 'text-sky-700');
+                }
 
-                // Seleccionar Variante
-                if (e.target.matches('.variant-btn')) {
-                    document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
-                    e.target.classList.add('bg-sky-100', 'border-sky-500');
-                    seleccion.variante = e.target.dataset.variante;
-                    seleccion.talla = null;
-                    confirmBtn.disabled = true;
-                    detailStockDisplay.classList.add('hidden');
-                    renderDetailTallas();
+                confirmBtn.disabled = false;
+            }
+            // Tipo de Movimiento
+            if (e.target.closest('#detail-btn-entrada')) {
+                entradaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-semibold';
+                salidaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold';
+                destinoContainer.classList.add('hidden');
+                seleccion.destino = null;
+            }
+            if (e.target.closest('#detail-btn-salida')) {
+                salidaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-red-500 bg-red-50 text-red-700 font-semibold';
+                entradaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold';
+                destinoContainer.classList.remove('hidden');
+                const firstDestinoBtn = destinoContainer.querySelector('.destino-btn');
+                if (firstDestinoBtn) {
+                     document.querySelectorAll('.destino-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
+                    firstDestinoBtn.classList.add('bg-sky-100', 'border-sky-500');
+                    seleccion.destino = firstDestinoBtn.dataset.destino;
                 }
-                // Seleccionar Talla
-                const tallaBtn = e.target.closest('.detail-talla-btn');
-                if (tallaBtn) {
-                    document.querySelectorAll('.detail-talla-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
-                    tallaBtn.classList.add('bg-sky-100', 'border-sky-500');
-                    seleccion.talla = tallaBtn.dataset.talla;
-                    
-                    const stockValue = parseInt(tallaBtn.dataset.stock);
-                    stockNumberSpan.textContent = stockValue;
-                    detailStockDisplay.classList.remove('hidden');
-                    
-                    // Cambiar color del círculo de stock
-                    detailStockDisplay.classList.remove('bg-sky-100', 'text-sky-700', 'bg-red-100', 'text-red-700');
-                    if (stockValue < 10) {
-                        detailStockDisplay.classList.add('bg-red-100', 'text-red-700');
-                    } else {
-                        detailStockDisplay.classList.add('bg-sky-100', 'text-sky-700');
-                    }
-
-                    confirmBtn.disabled = false;
-                }
-                // Tipo de Movimiento
-                if (e.target.closest('#detail-btn-entrada')) {
-                    entradaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-semibold';
-                    salidaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold';
-                    destinoContainer.classList.add('hidden');
-                    seleccion.destino = null;
-                }
-                if (e.target.closest('#detail-btn-salida')) {
-                    salidaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-red-500 bg-red-50 text-red-700 font-semibold';
-                    entradaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold';
-                    destinoContainer.classList.remove('hidden');
-                    const firstDestinoBtn = destinoContainer.querySelector('.destino-btn');
-                    if (firstDestinoBtn) {
-                         document.querySelectorAll('.destino-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
-                        firstDestinoBtn.classList.add('bg-sky-100', 'border-sky-500');
-                        seleccion.destino = firstDestinoBtn.dataset.destino;
-                    }
-                }
-                // Seleccionar Destino
-                const destinoBtn = e.target.closest('.destino-btn');
-                if (destinoBtn) {
-                    document.querySelectorAll('.destino-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
-                    destinoBtn.classList.add('bg-sky-100', 'border-sky-500');
-                    seleccion.destino = destinoBtn.dataset.destino;
-                }
-                // Confirmar
-                if (e.target.matches('#detail-btn-confirmar')) {
-                    handleConfirmClick();
-                }
-            });
-        }
+            }
+            // Seleccionar Destino
+            const destinoBtn = e.target.closest('.destino-btn');
+            if (destinoBtn) {
+                document.querySelectorAll('.destino-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
+                destinoBtn.classList.add('bg-sky-100', 'border-sky-500');
+                seleccion.destino = destinoBtn.dataset.destino;
+            }
+            // Confirmar
+            if (e.target.matches('#detail-btn-confirmar')) {
+                handleConfirmClick();
+            }
+        });
 
         async function handleConfirmClick() {
             const currentSelection = { ...seleccion };
