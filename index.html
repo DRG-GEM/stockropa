@@ -47,10 +47,10 @@
                 </div>
                 <h1 class="text-xl md:text-2xl font-bold text-slate-700">Gestión de Stock</h1>
             </div>
-            <div id="nav-buttons" class="flex gap-2">
-                 <button id="btn-inicio" class="bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors">Registrar</button>
-                 <button id="btn-ver-stock" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Ver Stock</button>
-                 <button id="btn-carga-masiva" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Carga Masiva</button>
+            <div id="nav-buttons" class="flex gap-2 text-sm">
+                 <button id="btn-inicio" class="bg-sky-500 text-white px-3 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors">Registrar</button>
+                 <button id="btn-ver-stock" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Stock</button>
+                 <button id="btn-carga-masiva" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Carga</button>
             </div>
         </header>
 
@@ -182,7 +182,7 @@
         };
         
         const imagenesPrendas = {
-            "Babi": "https://www.bayon.es/41802-superlarge_default/baby-personalizado-colegio-y-guarderia-cuadros-gomas-bayon.jpg",
+            "Babi": "https://drive.google.com/uc?id=1Aba5gFMmcgZFi5fQ6jazAlBGk4gbX3Vd",
             "Camiseta": "https://i.imgur.com/example.png",
             "Pantalón": "https://i.imgur.com/example.png",
             "Malla": "https://i.imgur.com/example.png",
@@ -312,7 +312,7 @@
             detailOptions.innerHTML += `
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">Talla</label>
-                    <div id="detail-tallas-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-2"></div>
+                    <div id="detail-tallas-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-2"></div>
                 </div>
                 <div>
                     <label for="detail-cantidad" class="block text-sm font-medium text-slate-700 mb-1">Cantidad</label>
