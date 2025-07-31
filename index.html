@@ -385,6 +385,7 @@
         }
 
         async function handleConfirmClick() {
+            const currentSelection = { ...seleccion };
             const cantidad = parseInt(document.getElementById('detail-cantidad').value);
             if (!cantidad || cantidad < 1) {
                 showModal('Error', 'La cantidad debe ser un número mayor que cero.', false);
@@ -395,7 +396,7 @@
             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
             
             const esSalida = document.getElementById('detail-btn-salida').classList.contains('border-red-500');
-            const docId = `${seleccion.seccion}_${seleccion.prenda}_${seleccion.variante || ''}_${seleccion.talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
+            const docId = `${currentSelection.seccion}_${currentSelection.prenda}_${currentSelection.variante || ''}_${currentSelection.talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
             const docRef = doc(db, SECRET_KEY, docId);
             
             try {
@@ -413,15 +414,15 @@
                     };
                     datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) + cantidad;
                 } else {
-                    if (!seleccion.destino) {
+                    if (!currentSelection.destino) {
                         showModal('Error', 'Debes seleccionar un destino para la salida.', false);
                         confirmBtn.disabled = false;
                         confirmBtn.innerHTML = 'Confirmar Movimiento';
                         return;
                     }
-                    const stockDestinoKey = seleccion.destino === 'tiendaVP' ? 'stockVP' : 'stockPII';
+                    const stockDestinoKey = currentSelection.destino === 'tiendaVP' ? 'stockVP' : 'stockPII';
                     resumen = {
-                        lugar: seleccion.destino === 'tiendaVP' ? 'Tienda VP' : 'Tienda PII',
+                        lugar: currentSelection.destino === 'tiendaVP' ? 'Tienda VP' : 'Tienda PII',
                         stockAnterior: stockActual[stockDestinoKey] || 0,
                         stockNuevo: (stockActual[stockDestinoKey] || 0) + cantidad
                     };
@@ -430,13 +431,13 @@
                 }
 
                 const finalData = {
-                    seccion: seleccion.seccion, prenda: seleccion.prenda, variante: seleccion.variante || '', talla: seleccion.talla,
+                    seccion: currentSelection.seccion, prenda: currentSelection.prenda, variante: currentSelection.variante || '', talla: currentSelection.talla,
                     ...datosActualizados
                 };
                 
                 await setDoc(docRef, finalData);
 
-                showSummaryModal(cantidad, esSalida, resumen);
+                showSummaryModal(currentSelection, cantidad, esSalida, resumen);
                 resetApp();
 
             } catch (error) {
@@ -466,8 +467,8 @@
             modal.classList.remove('hidden');
         }
 
-        function showSummaryModal(cantidad, esSalida, resumen) {
-            const { prenda, variante, talla } = seleccion;
+        function showSummaryModal(currentSelection, cantidad, esSalida, resumen) {
+            const { prenda, variante, talla } = currentSelection;
             const itemDescription = `${prenda} ${variante || ''} (Talla: ${talla})`;
             const movimiento = esSalida 
                 ? `<span class="font-semibold text-red-600">SALIDA de ${cantidad}</span> unidades`
