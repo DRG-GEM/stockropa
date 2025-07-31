@@ -52,13 +52,14 @@
                  <button id="btn-ver-stock" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Stock</button>
                  <button id="btn-carga-masiva" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Carga</button>
                  <button id="btn-historial" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Historial</button>
+                 <button id="btn-stats" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Stats</button>
             </div>
         </header>
 
         <!-- Contenedor de Pantallas -->
         <main id="screens-container">
 
-            <!-- Pantalla de Registro (Ahora es una sola pantalla dinámica) -->
+            <!-- Pantalla de Registro -->
             <div id="screen-registro" class="screen active">
                 <div id="seccion-selector">
                     <h2 class="text-lg font-semibold mb-4 text-center">1. Selecciona una sección:</h2>
@@ -117,9 +118,7 @@
                                 <th scope="col" class="px-4 py-3 text-center font-bold whitespace-nowrap">Total</th>
                             </tr>
                         </thead>
-                        <tbody id="stock-table-body">
-                           <tr><td colspan="5" class="text-center p-8"><i class="fas fa-spinner fa-spin text-2xl text-sky-500"></i><p class="mt-2">Cargando stock...</p></td></tr>
-                        </tbody>
+                        <tbody id="stock-table-body"></tbody>
                     </table>
                  </div>
                  <p class="text-xs text-slate-400 text-right mt-2 md:hidden">← Desliza la tabla para ver más →</p>
@@ -152,10 +151,23 @@
                                 <th scope="col" class="px-4 py-3">Movimiento</th>
                             </tr>
                         </thead>
-                        <tbody id="history-table-body">
-                           <!-- Historial se cargará aquí -->
-                        </tbody>
+                        <tbody id="history-table-body"></tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Pantalla de Estadísticas -->
+            <div id="screen-stats" class="screen">
+                <h2 class="text-2xl font-bold mb-6">Estadísticas</h2>
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-600">Artículos con Stock Bajo (Menos de 10)</h3>
+                        <div id="low-stock-list" class="bg-white p-4 rounded-xl shadow-md space-y-3"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-3 text-slate-600">Top 5 Prendas Más Populares (Salidas)</h3>
+                        <div id="top-products-list" class="bg-white p-4 rounded-xl shadow-md space-y-3"></div>
+                    </div>
                 </div>
             </div>
 
@@ -170,9 +182,7 @@
                     </div>
                     <h3 id="modal-title" class="text-lg font-medium text-slate-900">Movimiento Registrado</h3>
                 </div>
-                <div id="modal-summary" class="text-sm text-left space-y-2">
-                    <!-- El contenido del resumen se insertará aquí -->
-                </div>
+                <div id="modal-summary" class="text-sm text-left space-y-2"></div>
                 <button id="modal-close" class="mt-6 w-full bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold">Aceptar</button>
             </div>
         </div>
@@ -196,6 +206,8 @@
         const db = getFirestore(app);
         const SECRET_KEY = "stock-cooperativa-2a8b3c4d-1e9f-4b2c-8d7e-5f6a7b8c9d0e";
         const HISTORY_COLLECTION = "history";
+        const LOW_STOCK_THRESHOLD = 10;
+        const LOW_STOCK_ALERT_THRESHOLD = 5;
 
         const productos = {
           "Guardería": { "Babi": { tallas: ["00", "0", "1", "2", "3"] }, "Camiseta": { "Manga Corta": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Manga Larga": { tallas: ["00", "0", "1", "2", "3", "4"] } }, "Pantalón": { "Corto": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Largo": { tallas: ["00", "0", "1", "2", "3", "4", "6"] } }, "Malla": { tallas: ["00", "0", "1", "2", "3"] }, "Chaqueta": { tallas: ["00", "0", "1", "2", "3", "4"] }, "Chándal": { tallas: ["3", "4"] } },
@@ -225,6 +237,7 @@
 
         let seleccion = { seccion: null, prenda: null, variante: null, talla: null, destino: null };
         let stockData = [];
+        let historyData = [];
 
         const screens = document.querySelectorAll('.screen');
         const modal = document.getElementById('modal');
@@ -238,6 +251,7 @@
         const btnVerStock = document.getElementById('btn-ver-stock');
         const btnCargaMasiva = document.getElementById('btn-carga-masiva');
         const btnHistorial = document.getElementById('btn-historial');
+        const btnStats = document.getElementById('btn-stats');
         const seccionSelector = document.getElementById('seccion-selector');
         const prendaSelector = document.getElementById('prenda-selector');
         const prendasGrid = document.getElementById('prendas-grid');
@@ -249,6 +263,8 @@
         const stockNumberSpan = document.getElementById('stock-number');
         const detailImage = document.getElementById('detail-image');
         const historyTableBody = document.getElementById('history-table-body');
+        const lowStockList = document.getElementById('low-stock-list');
+        const topProductsList = document.getElementById('top-products-list');
 
         function goToScreen(screenId) {
             screens.forEach(s => s.classList.remove('active'));
@@ -262,6 +278,8 @@
             btnCargaMasiva.classList.toggle('bg-slate-200', screenId !== 'screen-bulk-load');
             btnHistorial.classList.toggle('bg-sky-500', screenId === 'screen-history');
             btnHistorial.classList.toggle('bg-slate-200', screenId !== 'screen-history');
+            btnStats.classList.toggle('bg-sky-500', screenId === 'screen-stats');
+            btnStats.classList.toggle('bg-slate-200', screenId !== 'screen-stats');
         }
 
         // --- NUEVO FLUJO DE REGISTRO ---
@@ -373,7 +391,7 @@
                 const stockItem = stockData.find(d => d.id === docId);
                 const stockAlmacen = stockItem ? stockItem.stockAlmacen || 0 : 0;
                 
-                const stockColor = stockAlmacen < 10 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600';
+                const stockColor = stockAlmacen < LOW_STOCK_THRESHOLD ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600';
 
                 const buttonHTML = `
                     <button class="detail-talla-btn bg-white p-2 text-sm rounded-lg border-2 flex flex-col items-center justify-center h-16" data-talla="${talla}" data-stock="${stockAlmacen}">
@@ -413,7 +431,7 @@
                 detailStockDisplay.classList.remove('hidden');
                 
                 detailStockDisplay.classList.remove('bg-sky-100', 'text-sky-700', 'bg-red-100', 'text-red-700');
-                if (stockValue < 10) {
+                if (stockValue < LOW_STOCK_THRESHOLD) {
                     detailStockDisplay.classList.add('bg-red-100', 'text-red-700');
                 } else {
                     detailStockDisplay.classList.add('bg-sky-100', 'text-sky-700');
@@ -513,6 +531,17 @@
                         timestamp: serverTimestamp()
                     });
 
+                    if (datosActualizados.stockAlmacen < LOW_STOCK_ALERT_THRESHOLD) {
+                        const alertRef = doc(collection(db, "mail"));
+                        transaction.set(alertRef, {
+                            to: 'tu-email@example.com', // CAMBIAR ESTO
+                            message: {
+                                subject: `Alerta de Stock Bajo: ${currentSelection.prenda}`,
+                                text: `El stock para ${currentSelection.prenda} (${currentSelection.variante || ''}) Talla: ${currentSelection.talla} ha bajado a ${datosActualizados.stockAlmacen}.`
+                            }
+                        });
+                    }
+
                     showSummaryModal(currentSelection, cantidad, esSalida, resumen);
                 });
 
@@ -577,20 +606,16 @@
         modalClose.addEventListener('click', () => modal.classList.add('hidden'));
 
         // Navegación principal
-        btnInicio.addEventListener('click', () => {
-            resetApp();
-        });
-        btnVerStock.addEventListener('click', () => {
-            goToScreen('screen-stock');
-        });
-        btnCargaMasiva.addEventListener('click', () => {
-            goToScreen('screen-bulk-load');
-        });
-        btnHistorial.addEventListener('click', () => {
-            goToScreen('screen-history');
+        btnInicio.addEventListener('click', () => { resetApp(); });
+        btnVerStock.addEventListener('click', () => { goToScreen('screen-stock'); });
+        btnCargaMasiva.addEventListener('click', () => { goToScreen('screen-bulk-load'); });
+        btnHistorial.addEventListener('click', () => { goToScreen('screen-history'); });
+        btnStats.addEventListener('click', () => {
+            renderStats();
+            goToScreen('screen-stats');
         });
         
-        // --- RENDERIZADO DE TABLAS ---
+        // --- RENDERIZADO DE TABLAS Y STATS ---
         function renderStockTable(data) {
             const tableBody = document.getElementById('stock-table-body');
             tableBody.innerHTML = '';
@@ -610,7 +635,7 @@
                 const total = (item.stockAlmacen || 0) + (item.stockVP || 0) + (item.stockPII || 0);
                 const nombreCompleto = `${item.prenda} ${item.variante || ''} - Talla: ${item.talla}`;
                 const stockAlmacen = item.stockAlmacen || 0;
-                const stockClass = stockAlmacen < 10 ? 'text-red-500 font-bold' : '';
+                const stockClass = stockAlmacen < LOW_STOCK_THRESHOLD ? 'text-red-500 font-bold' : '';
 
                 const row = `<tr class="bg-white border-b hover:bg-slate-50"><th scope="row" class="px-4 py-4 font-medium text-slate-900 whitespace-nowrap"><span class="block">${nombreCompleto}</span><span class="block text-xs text-slate-400">${item.seccion}</span></th><td class="px-4 py-4 text-center ${stockClass}">${stockAlmacen}</td><td class="px-4 py-4 text-center">${item.stockVP || 0}</td><td class="px-4 py-4 text-center">${item.stockPII || 0}</td><td class="px-4 py-4 text-center font-bold text-slate-800">${total}</td></tr>`;
                 tableBody.innerHTML += row;
@@ -645,6 +670,41 @@
             });
         }
 
+        function renderStats() {
+            // Low Stock
+            const lowStockItems = stockData.filter(item => (item.stockAlmacen || 0) < LOW_STOCK_THRESHOLD)
+                                           .sort((a, b) => (a.stockAlmacen || 0) - (b.stockAlmacen || 0));
+            lowStockList.innerHTML = '';
+            if (lowStockItems.length === 0) {
+                lowStockList.innerHTML = '<p class="text-slate-500">¡No hay artículos con stock bajo!</p>';
+            } else {
+                lowStockItems.forEach(item => {
+                    const nombreCompleto = `${item.prenda} ${item.variante || ''} - Talla: ${item.talla}`;
+                    lowStockList.innerHTML += `<div class="flex justify-between items-center"><p>${nombreCompleto}</p><p class="font-bold text-red-500">${item.stockAlmacen || 0}</p></div>`;
+                });
+            }
+
+            // Top Products
+            const sales = historyData.filter(item => item.tipo === 'salida');
+            const productCounts = sales.reduce((acc, item) => {
+                const name = `${item.prenda} ${item.variante || ''}`;
+                acc[name] = (acc[name] || 0) + item.cantidad;
+                return acc;
+            }, {});
+
+            const sortedProducts = Object.entries(productCounts)
+                                         .sort(([, a], [, b]) => b - a)
+                                         .slice(0, 5);
+            topProductsList.innerHTML = '';
+            if (sortedProducts.length === 0) {
+                topProductsList.innerHTML = '<p class="text-slate-500">Aún no hay datos de salidas.</p>';
+            } else {
+                sortedProducts.forEach(([name, count]) => {
+                    topProductsList.innerHTML += `<div class="flex justify-between items-center"><p>${name}</p><p class="font-bold text-sky-600">${count} uds.</p></div>`;
+                });
+            }
+        }
+
         // --- LISTENERS DE DATOS ---
         onSnapshot(collection(db, SECRET_KEY), (querySnapshot) => {
             stockData = [];
@@ -656,7 +716,7 @@
 
         const historyQuery = query(collection(db, HISTORY_COLLECTION), orderBy('timestamp', 'desc'));
         onSnapshot(historyQuery, (querySnapshot) => {
-            const historyData = [];
+            historyData = [];
             querySnapshot.forEach((doc) => {
                 historyData.push(doc.data());
             });
