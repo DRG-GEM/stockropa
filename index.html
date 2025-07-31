@@ -74,7 +74,13 @@
                 <div id="detail-view-container" class="detail-view mt-6">
                     <button id="back-to-prendas" class="mb-4 text-slate-500 hover:text-slate-800">&larr; Volver a prendas</button>
                     <div class="bg-white p-6 rounded-xl shadow-md">
-                        <h2 id="detail-title" class="text-2xl font-bold mb-6 text-center"></h2>
+                        <div class="flex justify-center items-center gap-4 mb-6">
+                            <h2 id="detail-title" class="text-2xl font-bold text-center"></h2>
+                            <div id="detail-stock-display" class="hidden w-16 h-16 bg-sky-100 text-sky-700 rounded-full flex flex-col items-center justify-center font-bold text-lg leading-tight">
+                                <span id="stock-number" class="text-2xl"></span>
+                                <span class="text-xs font-medium">Stock</span>
+                            </div>
+                        </div>
                         <div id="detail-options" class="space-y-6"></div>
                     </div>
                 </div>
@@ -183,6 +189,8 @@
         const detailTitle = document.getElementById('detail-title');
         const detailOptions = document.getElementById('detail-options');
         const backToPrendasBtn = document.getElementById('back-to-prendas');
+        const detailStockDisplay = document.getElementById('detail-stock-display');
+        const stockNumberSpan = document.getElementById('stock-number');
 
         function goToScreen(screenId) {
             screens.forEach(s => s.classList.remove('active'));
@@ -233,6 +241,7 @@
         backToPrendasBtn.addEventListener('click', () => {
             detailViewContainer.classList.remove('active');
             prendaSelector.classList.remove('hidden');
+            detailStockDisplay.classList.add('hidden');
             seleccion.prenda = null;
             seleccion.variante = null;
             seleccion.talla = null;
@@ -298,14 +307,12 @@
             tallasGrid.innerHTML = ''; // Clear existing buttons
 
             item.tallas.forEach(talla => {
-                // Find the stock data for this specific item
                 const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
                 const stockItem = stockData.find(d => d.id === docId);
-
                 const stockAlmacen = stockItem ? stockItem.stockAlmacen || 0 : 0;
                 
                 const buttonHTML = `
-                    <button class="detail-talla-btn bg-white p-2 text-sm rounded-lg border-2 flex flex-col items-center justify-center h-16" data-talla="${talla}">
+                    <button class="detail-talla-btn bg-white p-2 text-sm rounded-lg border-2 flex flex-col items-center justify-center h-16" data-talla="${talla}" data-stock="${stockAlmacen}">
                         <span class="font-bold text-base">${talla}</span>
                         <span class="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full mt-1">Disp: ${stockAlmacen}</span>
                     </button>
@@ -316,21 +323,29 @@
 
         function addDetailListeners() {
             detailOptions.addEventListener('click', (e) => {
+                const confirmBtn = document.getElementById('detail-btn-confirmar');
                 // Seleccionar Variante
                 if (e.target.matches('.variant-btn')) {
                     document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
                     e.target.classList.add('bg-sky-100', 'border-sky-500');
                     seleccion.variante = e.target.dataset.variante;
-                    seleccion.talla = null; // Deseleccionar talla al cambiar variante
-                    document.getElementById('detail-btn-confirmar').disabled = true;
+                    seleccion.talla = null;
+                    confirmBtn.disabled = true;
+                    detailStockDisplay.classList.add('hidden');
                     renderDetailTallas();
                 }
                 // Seleccionar Talla
-                if (e.target.matches('.detail-talla-btn')) {
+                const tallaBtn = e.target.closest('.detail-talla-btn');
+                if (tallaBtn) {
                     document.querySelectorAll('.detail-talla-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
-                    e.target.classList.add('bg-sky-100', 'border-sky-500');
-                    seleccion.talla = e.target.dataset.talla;
-                    document.getElementById('detail-btn-confirmar').disabled = false;
+                    tallaBtn.classList.add('bg-sky-100', 'border-sky-500');
+                    seleccion.talla = tallaBtn.dataset.talla;
+                    
+                    // Update and show stock display
+                    stockNumberSpan.textContent = tallaBtn.dataset.stock;
+                    detailStockDisplay.classList.remove('hidden');
+
+                    confirmBtn.disabled = false;
                 }
                 // Tipo de Movimiento
                 if (e.target.closest('#detail-btn-entrada')) {
@@ -404,6 +419,7 @@
             seccionSelector.classList.remove('hidden');
             prendaSelector.classList.add('hidden');
             detailViewContainer.classList.remove('active');
+            detailStockDisplay.classList.add('hidden');
             goToScreen('screen-registro');
         }
 
