@@ -295,9 +295,23 @@
             const { seccion, prenda, variante } = seleccion;
             const item = variante ? productos[seccion][prenda][variante] : productos[seccion][prenda];
             const tallasGrid = document.getElementById('detail-tallas-grid');
-            tallasGrid.innerHTML = item.tallas.map(t => `
-                <button class="detail-talla-btn bg-white p-2 text-sm rounded-lg border-2" data-talla="${t}">${t}</button>
-            `).join('');
+            tallasGrid.innerHTML = ''; // Clear existing buttons
+
+            item.tallas.forEach(talla => {
+                // Find the stock data for this specific item
+                const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
+                const stockItem = stockData.find(d => d.id === docId);
+
+                const stockAlmacen = stockItem ? stockItem.stockAlmacen || 0 : 0;
+                
+                const buttonHTML = `
+                    <button class="detail-talla-btn bg-white p-2 text-sm rounded-lg border-2 flex flex-col items-center justify-center h-16" data-talla="${talla}">
+                        <span class="font-bold text-base">${talla}</span>
+                        <span class="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full mt-1">Disp: ${stockAlmacen}</span>
+                    </button>
+                `;
+                tallasGrid.innerHTML += buttonHTML;
+            });
         }
 
         function addDetailListeners() {
