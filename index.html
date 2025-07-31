@@ -322,6 +322,10 @@
         function addDetailListeners() {
             detailOptions.addEventListener('click', (e) => {
                 const confirmBtn = document.getElementById('detail-btn-confirmar');
+                const entradaBtn = document.getElementById('detail-btn-entrada');
+                const salidaBtn = document.getElementById('detail-btn-salida');
+                const destinoContainer = document.getElementById('detail-destino-container');
+
                 // Seleccionar Variante
                 if (e.target.matches('.variant-btn')) {
                     document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
@@ -346,20 +350,21 @@
                 }
                 // Tipo de Movimiento
                 if (e.target.closest('#detail-btn-entrada')) {
-                    document.getElementById('detail-btn-entrada').classList.add('border-green-500', 'bg-green-50', 'text-green-700');
-                    document.getElementById('detail-btn-salida').classList.remove('border-red-500', 'bg-red-50', 'text-red-700');
-                    document.getElementById('detail-destino-container').classList.add('hidden');
+                    entradaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-semibold';
+                    salidaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold';
+                    destinoContainer.classList.add('hidden');
                     seleccion.destino = null;
                 }
                 if (e.target.closest('#detail-btn-salida')) {
-                    document.getElementById('detail-btn-salida').classList.add('border-red-500', 'bg-red-50', 'text-red-700');
-                    document.getElementById('detail-btn-entrada').classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
-                    const destinoContainer = document.getElementById('detail-destino-container');
+                    salidaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-red-500 bg-red-50 text-red-700 font-semibold';
+                    entradaBtn.className = 'movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold';
                     destinoContainer.classList.remove('hidden');
-                    // Select first destination by default
                     const firstDestinoBtn = destinoContainer.querySelector('.destino-btn');
-                    firstDestinoBtn.classList.add('bg-sky-100', 'border-sky-500');
-                    seleccion.destino = firstDestinoBtn.dataset.destino;
+                    if (firstDestinoBtn) {
+                         document.querySelectorAll('.destino-btn').forEach(b => b.classList.remove('bg-sky-100', 'border-sky-500'));
+                        firstDestinoBtn.classList.add('bg-sky-100', 'border-sky-500');
+                        seleccion.destino = firstDestinoBtn.dataset.destino;
+                    }
                 }
                 // Seleccionar Destino
                 const destinoBtn = e.target.closest('.destino-btn');
@@ -423,11 +428,8 @@
             } catch (error) {
                 console.error("Error al actualizar el documento: ", error);
                 showModal('Error', 'No se pudo registrar el movimiento.', 'error');
-            } finally {
-                if (!esSalida || seleccion.destino) {
-                    confirmBtn.disabled = false;
-                    confirmBtn.innerHTML = 'Confirmar Movimiento';
-                }
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Confirmar Movimiento';
             }
         }
         
