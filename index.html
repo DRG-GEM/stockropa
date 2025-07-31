@@ -75,8 +75,8 @@
 
             <div id="screen-tallas" class="screen">
                 <button class="back-btn mb-4 text-slate-500 hover:text-slate-800">&larr; Volver</button>
-                <h2 class="text-lg font-semibold mb-4 text-center">Selecciona una talla:</h2>
-                <div id="tallas-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
+                <h2idh2idlasslass="text-lg font-semibold mb-4 text-center">Selecciona una talla:</h2>
+                <div iidd="tallas-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
             </div>
 
             <div id="screen-accion" class="screen">
@@ -173,20 +173,24 @@
             import { getFirestore, doc, getDoc, setDoc, increment, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
             // ==================================================================
-            // ¡¡¡IMPORTANTE!!!
-            // Pega aquí la configuración de TU proyecto de Firebase.
-            // La encuentras en:
-            // Configuración del proyecto (el engranaje) -> General -> Tus apps -> SDK setup and configuration
+            // ¡¡¡ATENCIÓN!!!
+            // Pega aquí SOLAMENTE tu apiKey. El resto ya está configurado.
             // ==================================================================
             const firebaseConfig = {
-  apiKey: "AIzaSyD1Zujz9sNiG7GYLkv5wUFWOPDIbF6DrBU",
-  authDomain: "stock-ropa.firebaseapp.com",
-  projectId: "stock-ropa",
-  storageBucket: "stock-ropa.firebasestorage.app",
-  messagingSenderId: "289770874193",
-  appId: "1:289770874193:web:37cb97c578bde1a1b89f70"
-};
+              apiKey: "AIzaSyD1Zujz9sNiG7GYLkv5wUFWOPDIbF6DrBU", // <--- PEGA TU API KEY AQUÍ
+              authDomain: "stock-ropa.firebaseapp.com",
+              projectId: "stock-ropa",
+              storageBucket: "stock-ropa.appspot.com",
+              messagingSenderId: "289770874193",
+              appId: "1:289770874193:web:37cb97c578bde1a1b89f70"
+            };
             
+            // Verificación de que la apiKey ha sido cambiada
+            if (firebaseConfig.apiKey === "AQUÍ_VA_TU_API_KEY") {
+                showError("Error de configuración: No has pegado tu 'apiKey' en el archivo HTML. Por favor, edita el archivo y añade tu clave.");
+                throw new Error("firebaseConfig.apiKey no ha sido configurada.");
+            }
+
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
             const SECRET_KEY = "stock-cooperativa-2a8b3c4d-1e9f-4b2c-8d7e-5f6a7b8c9d0e";
@@ -274,7 +278,7 @@
                     button.dataset.talla = talla;
                     button.textContent = talla;
                     tallasGrid.appendChild(button);
-                });
+                }
             }
             
             document.body.addEventListener('click', (e) => {
@@ -295,4 +299,204 @@
                         goToScreen('screen-tallas');
                     }
                 }
-                else if (e.target.closest('.variante-btn')
+                else if (e.target.closest('.variante-btn')) {
+                    seleccion.variante = e.target.closest('.variante-btn').dataset.variante;
+                    const tallas = productos[seleccion.seccion][seleccion.prenda][seleccion.variante].tallas;
+                    renderTallas(tallas);
+                    goToScreen('screen-tallas');
+                }
+                else if (e.target.closest('.talla-btn')) {
+                    seleccion.talla = e.target.closest('.talla-btn').dataset.talla;
+                    let itemText = `${seleccion.prenda} - ${seleccion.talla}`;
+                    if (seleccion.variante) {
+                        itemText = `${seleccion.prenda} (${seleccion.variante}) - ${seleccion.talla}`;
+                    }
+                    itemSeleccionadoP.textContent = itemText;
+                    goToScreen('screen-accion');
+                }
+                else if (e.target.closest('.back-btn')) {
+                    goBack();
+                }
+            });
+
+            let tipoMovimiento = 'entrada';
+            btnEntrada.addEventListener('click', () => {
+                tipoMovimiento = 'entrada';
+                btnEntrada.classList.remove('border-slate-300', 'text-slate-500', 'bg-white');
+                btnEntrada.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                btnSalida.classList.add('border-slate-300', 'text-slate-500');
+                btnSalida.classList.remove('border-red-500', 'bg-red-50', 'text-red-700');
+                destinoContainer.classList.add('hidden');
+            });
+
+            btnSalida.addEventListener('click', () => {
+                tipoMovimiento = 'salida';
+                btnSalida.classList.remove('border-slate-300', 'text-slate-500', 'bg-white');
+                btnSalida.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
+                btnEntrada.classList.add('border-slate-300', 'text-slate-500');
+                btnEntrada.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
+                destinoContainer.classList.remove('hidden');
+            });
+
+            btnConfirmar.addEventListener('click', async () => {
+                const cantidad = parseInt(cantidadInput.value);
+                if (!cantidad || cantidad < 1) {
+                    showModal('Error', 'La cantidad debe ser un número mayor que cero.', 'error');
+                    return;
+                }
+
+                btnConfirmar.disabled = true;
+                btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+
+                const docId = `${seleccion.seccion}_${seleccion.prenda}_${seleccion.variante || ''}_${seleccion.talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
+                const docRef = doc(db, SECRET_KEY, docId);
+                
+                try {
+                    const docSnap = await getDoc(docRef);
+                    let updateData = {};
+                    
+                    if (tipoMovimiento === 'entrada') {
+                        updateData.stockAlmacen = increment(cantidad);
+                    } else {
+                        const destino = destinoSelect.value;
+                        updateData.stockAlmacen = increment(-cantidad);
+                        if (destino === 'tiendaVP') {
+                            updateData.stockVP = increment(cantidad);
+                        } else {
+                            updateData.stockPII = increment(cantidad);
+                        }
+                    }
+
+                    if (!docSnap.exists()) {
+                        const initialData = {
+                            seccion: seleccion.seccion, prenda: seleccion.prenda, variante: seleccion.variante || '', talla: seleccion.talla,
+                            stockAlmacen: 0, stockVP: 0, stockPII: 0, ...updateData
+                        };
+                        await setDoc(docRef, initialData);
+                    } else {
+                        await setDoc(docRef, updateData, { merge: true });
+                    }
+
+                    showModal('¡Hecho!', 'El movimiento de stock ha sido registrado correctamente.');
+                    resetApp();
+
+                } catch (error) {
+                    console.error("Error al actualizar el documento: ", error);
+                    showModal('Error', 'No se pudo registrar el movimiento. Revisa la conexión y las reglas de seguridad de Firebase.', 'error');
+                } finally {
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.textContent = 'Confirmar';
+                }
+            });
+            
+            function resetApp() {
+                seleccion = { seccion: null, prenda: null, variante: null, talla: null, historial: [] };
+                cantidadInput.value = 1;
+                goToScreen('screen-inicio');
+            }
+
+            function showModal(title, message, type = 'success') {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modalIcon.innerHTML = '';
+                if (type === 'success') {
+                    modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4';
+                    modalIcon.innerHTML = '<i class="fas fa-check text-green-600 text-2xl"></i>';
+                } else {
+                    modalIcon.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4';
+                    modalIcon.innerHTML = '<i class="fas fa-times text-red-600 text-2xl"></i>';
+                }
+                modal.classList.remove('hidden');
+            }
+            modalClose.addEventListener('click', () => modal.classList.add('hidden'));
+
+            btnVerStock.addEventListener('click', () => {
+                goToScreen('screen-stock');
+                btnVerStock.classList.add('hidden');
+                btnInicio.classList.remove('hidden');
+            });
+
+            btnInicio.addEventListener('click', () => {
+                resetApp();
+                btnVerStock.classList.remove('hidden');
+                btnInicio.classList.add('hidden');
+            });
+            
+            function renderStockTable(data) {
+                const tableBody = document.getElementById('stock-table-body');
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8">No hay datos de stock. Empieza a registrar movimientos.</td></tr>';
+                    return;
+                }
+
+                data.sort((a, b) => {
+                    if (a.seccion < b.seccion) return -1; if (a.seccion > b.seccion) return 1;
+                    if (a.prenda < b.prenda) return -1; if (a.prenda > b.prenda) return 1;
+                    if (a.variante < b.variante) return -1; if (a.variante > b.variante) return 1;
+                    const tallaA = parseInt(a.talla); const tallaB = parseInt(b.talla);
+                    if (!isNaN(tallaA) && !isNaN(tallaB)) { return tallaA - tallaB; }
+                    return a.talla.localeCompare(b.talla);
+                });
+
+                data.forEach(item => {
+                    const total = item.stockAlmacen + item.stockVP + item.stockPII;
+                    const nombreCompleto = `${item.prenda} ${item.variante || ''} - Talla: ${item.talla}`;
+                    const row = `<tr class="bg-white border-b hover:bg-slate-50"><th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap"><span class="block">${nombreCompleto}</span><span class="block text-xs text-slate-400">${item.seccion}</span></th><td class="px-6 py-4 text-center">${item.stockAlmacen}</td><td class="px-6 py-4 text-center">${item.stockVP}</td><td class="px-6 py-4 text-center">${item.stockPII}</td><td class="px-6 py-4 text-center font-bold text-slate-800">${total}</td></tr>`;
+                    tableBody.innerHTML += row;
+                });
+            }
+            
+            const unsub = onSnapshot(collection(db, SECRET_KEY), (querySnapshot) => {
+                stockData = [];
+                querySnapshot.forEach((doc) => {
+                    stockData.push({ id: doc.id, ...doc.data() });
+                });
+                renderStockTable(stockData);
+            }, (error) => {
+                console.error("Error al obtener stock: ", error);
+                 showError(`Error al conectar con la base de datos: ${error.message}. Revisa las reglas de seguridad y la configuración de Firebase.`);
+            });
+
+            stockSearchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredData = stockData.filter(item => {
+                    const nombreCompleto = `${item.seccion} ${item.prenda} ${item.variante || ''} ${item.talla}`.toLowerCase();
+                    return nombreCompleto.includes(searchTerm);
+                });
+                renderStockTable(filteredData);
+            });
+            
+            btnExportCSV.addEventListener('click', () => {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Seccion,Prenda,Variante,Talla,Stock Almacen,Stock Tienda VP,Stock Tienda PII,Total\n";
+
+                stockData.forEach(item => {
+                    const total = item.stockAlmacen + item.stockVP + item.stockPII;
+                    const row = [item.seccion, item.prenda, item.variante || '', item.talla, item.stockAlmacen, item.stockVP, item.stockPII, total].join(",");
+                    csvContent += row + "\n";
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "inventario_cooperativa.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            goToScreen('screen-inicio');
+
+        } catch (e) {
+            // Si algo falla, lo mostramos en el panel de error
+            const errorPanel = document.getElementById('error-panel');
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = `Error crítico: ${e.message}. Asegúrate de que has pegado correctamente la configuración de Firebase.`;
+            errorPanel.classList.remove('hidden');
+            console.error(e);
+        }
+    </script>
+</body>
+</html>
