@@ -30,9 +30,10 @@
                 </div>
                 <h1 class="text-xl md:text-2xl font-bold text-slate-700">Gestión de Stock</h1>
             </div>
-            <div id="nav-buttons">
+            <div id="nav-buttons" class="flex gap-2">
+                 <button id="btn-inicio" class="bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors">Registrar</button>
                  <button id="btn-ver-stock" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Ver Stock</button>
-                 <button id="btn-inicio" class="bg-sky-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors hidden">Registrar Movimiento</button>
+                 <button id="btn-carga-masiva" class="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Carga Masiva</button>
             </div>
         </header>
 
@@ -134,6 +135,23 @@
                  </div>
             </div>
 
+            <!-- Pantalla de Carga Masiva -->
+            <div id="screen-bulk-load" class="screen">
+                <h2 class="text-2xl font-bold mb-4">Carga Masiva de Stock</h2>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="mb-4">
+                        <label for="bulk-product-select" class="block text-sm font-medium text-slate-700 mb-1">Selecciona una Prenda</label>
+                        <select id="bulk-product-select" class="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                            <option value="">-- Elige un producto --</option>
+                        </select>
+                    </div>
+                    <div id="bulk-load-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+                        <!-- Los inputs de las tallas se generarán aquí -->
+                    </div>
+                    <button id="btn-bulk-save" class="w-full mt-6 bg-green-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-green-700 transition-transform transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed" disabled>Guardar Cambios</button>
+                </div>
+            </div>
+
         </main>
 
         <!-- Modal de Confirmación -->
@@ -152,7 +170,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, increment, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, increment, collection, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==================================================================
         // ¡¡¡ATENCIÓN!!!
@@ -198,17 +216,31 @@
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
         const modalClose = document.getElementById('modal-close');
-        const btnVerStock = document.getElementById('btn-ver-stock');
+        
+        // Botones de navegación
         const btnInicio = document.getElementById('btn-inicio');
+        const btnVerStock = document.getElementById('btn-ver-stock');
+        const btnCargaMasiva = document.getElementById('btn-carga-masiva');
+        
+        // Elementos de Carga Masiva
+        const bulkProductSelect = document.getElementById('bulk-product-select');
+        const bulkLoadGrid = document.getElementById('bulk-load-grid');
+        const btnBulkSave = document.getElementById('btn-bulk-save');
+
         const stockSearchInput = document.getElementById('stock-search');
         const btnExportCSV = document.getElementById('btn-export-csv');
 
         function goToScreen(screenId) {
             screens.forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
-            if(screenId !== 'screen-inicio') {
-                seleccion.historial.push(screenId);
-            }
+            
+            // Actualizar estado de los botones de navegación
+            btnInicio.classList.toggle('bg-sky-500', screenId.startsWith('screen-inicio') || screenId.startsWith('screen-prenda') || screenId.startsWith('screen-variante') || screenId.startsWith('screen-talla') || screenId.startsWith('screen-accion'));
+            btnInicio.classList.toggle('bg-slate-200', !(screenId.startsWith('screen-inicio') || screenId.startsWith('screen-prenda') || screenId.startsWith('screen-variante') || screenId.startsWith('screen-talla') || screenId.startsWith('screen-accion')));
+            btnVerStock.classList.toggle('bg-sky-500', screenId === 'screen-stock');
+            btnVerStock.classList.toggle('bg-slate-200', screenId !== 'screen-stock');
+            btnCargaMasiva.classList.toggle('bg-sky-500', screenId === 'screen-bulk-load');
+            btnCargaMasiva.classList.toggle('bg-slate-200', screenId !== 'screen-bulk-load');
         }
 
         function goBack() {
@@ -264,6 +296,7 @@
                 seleccion.seccion = e.target.closest('.seccion-btn').dataset.seccion;
                 renderPrendas(seleccion.seccion);
                 goToScreen('screen-prendas');
+                seleccion.historial = ['screen-inicio', 'screen-prendas'];
             }
             else if (e.target.closest('.prenda-btn')) {
                 seleccion.prenda = e.target.closest('.prenda-btn').dataset.prenda;
@@ -371,6 +404,7 @@
             seleccion = { seccion: null, prenda: null, variante: null, talla: null, historial: [] };
             cantidadInput.value = 1;
             goToScreen('screen-inicio');
+            seleccion.historial = ['screen-inicio'];
         }
 
         function showModal(title, message, type = 'success') {
@@ -388,16 +422,15 @@
         }
         modalClose.addEventListener('click', () => modal.classList.add('hidden'));
 
-        btnVerStock.addEventListener('click', () => {
-            goToScreen('screen-stock');
-            btnVerStock.classList.add('hidden');
-            btnInicio.classList.remove('hidden');
-        });
-
+        // Navegación principal
         btnInicio.addEventListener('click', () => {
             resetApp();
-            btnVerStock.classList.remove('hidden');
-            btnInicio.classList.add('hidden');
+        });
+        btnVerStock.addEventListener('click', () => {
+            goToScreen('screen-stock');
+        });
+        btnCargaMasiva.addEventListener('click', () => {
+            goToScreen('screen-bulk-load');
         });
         
         function renderStockTable(data) {
@@ -419,9 +452,9 @@
             });
 
             data.forEach(item => {
-                const total = item.stockAlmacen + item.stockVP + item.stockPII;
+                const total = (item.stockAlmacen || 0) + (item.stockVP || 0) + (item.stockPII || 0);
                 const nombreCompleto = `${item.prenda} ${item.variante || ''} - Talla: ${item.talla}`;
-                const row = `<tr class="bg-white border-b hover:bg-slate-50"><th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap"><span class="block">${nombreCompleto}</span><span class="block text-xs text-slate-400">${item.seccion}</span></th><td class="px-6 py-4 text-center">${item.stockAlmacen}</td><td class="px-6 py-4 text-center">${item.stockVP}</td><td class="px-6 py-4 text-center">${item.stockPII}</td><td class="px-6 py-4 text-center font-bold text-slate-800">${total}</td></tr>`;
+                const row = `<tr class="bg-white border-b hover:bg-slate-50"><th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap"><span class="block">${nombreCompleto}</span><span class="block text-xs text-slate-400">${item.seccion}</span></th><td class="px-6 py-4 text-center">${item.stockAlmacen || 0}</td><td class="px-6 py-4 text-center">${item.stockVP || 0}</td><td class="px-6 py-4 text-center">${item.stockPII || 0}</td><td class="px-6 py-4 text-center font-bold text-slate-800">${total}</td></tr>`;
                 tableBody.innerHTML += row;
             });
         }
@@ -434,7 +467,6 @@
             renderStockTable(stockData);
         }, (error) => {
             console.error("Error al obtener stock: ", error);
-             showError(`Error al conectar con la base de datos: ${error.message}. Revisa las reglas de seguridad y la configuración de Firebase.`);
         });
 
         stockSearchInput.addEventListener('input', (e) => {
@@ -451,8 +483,8 @@
             csvContent += "Seccion,Prenda,Variante,Talla,Stock Almacen,Stock Tienda VP,Stock Tienda PII,Total\n";
 
             stockData.forEach(item => {
-                const total = item.stockAlmacen + item.stockVP + item.stockPII;
-                const row = [item.seccion, item.prenda, item.variante || '', item.talla, item.stockAlmacen, item.stockVP, item.stockPII, total].join(",");
+                const total = (item.stockAlmacen || 0) + (item.stockVP || 0) + (item.stockPII || 0);
+                const row = [item.seccion, item.prenda, item.variante || '', item.talla, item.stockAlmacen || 0, item.stockVP || 0, item.stockPII || 0, total].join(",");
                 csvContent += row + "\n";
             });
 
@@ -464,8 +496,106 @@
             link.click();
             document.body.removeChild(link);
         });
+        
+        // --- LÓGICA DE CARGA MASIVA ---
+        function populateBulkProductSelect() {
+            for (const seccion in productos) {
+                for (const prenda in productos[seccion]) {
+                    const item = productos[seccion][prenda];
+                    if (item.tallas) { // Producto sin variantes
+                        const option = document.createElement('option');
+                        option.value = `${seccion}|${prenda}`;
+                        option.textContent = `${seccion} - ${prenda}`;
+                        bulkProductSelect.appendChild(option);
+                    } else { // Producto con variantes
+                        for (const variante in item) {
+                            const option = document.createElement('option');
+                            option.value = `${seccion}|${prenda}|${variante}`;
+                            option.textContent = `${seccion} - ${prenda} (${variante})`;
+                            bulkProductSelect.appendChild(option);
+                        }
+                    }
+                }
+            }
+        }
 
+        bulkProductSelect.addEventListener('change', async (e) => {
+            const value = e.target.value;
+            bulkLoadGrid.innerHTML = '<div class="col-span-full text-center"><i class="fas fa-spinner fa-spin text-2xl text-sky-500"></i></div>';
+            btnBulkSave.disabled = true;
+
+            if (!value) {
+                bulkLoadGrid.innerHTML = '';
+                return;
+            }
+
+            const [seccion, prenda, variante] = value.split('|');
+            const item = variante ? productos[seccion][prenda][variante] : productos[seccion][prenda];
+            const tallas = item.tallas;
+
+            bulkLoadGrid.innerHTML = '';
+            for (const talla of tallas) {
+                const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
+                const docRef = doc(db, SECRET_KEY, docId);
+                const docSnap = await getDoc(docRef);
+                const currentStock = docSnap.exists() ? docSnap.data().stockAlmacen || 0 : 0;
+
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label class="block text-sm font-medium text-slate-700 mb-1">${talla}</label>
+                    <input type="number" min="0" value="${currentStock}" 
+                           class="w-full p-2 border border-slate-300 rounded-lg"
+                           data-talla="${talla}">
+                `;
+                bulkLoadGrid.appendChild(div);
+            }
+            btnBulkSave.disabled = false;
+        });
+
+        btnBulkSave.addEventListener('click', async () => {
+            const value = bulkProductSelect.value;
+            if (!value) return;
+
+            btnBulkSave.disabled = true;
+            btnBulkSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            const [seccion, prenda, variante] = value.split('|');
+            const batch = writeBatch(db);
+
+            const inputs = bulkLoadGrid.querySelectorAll('input');
+            inputs.forEach(input => {
+                const talla = input.dataset.talla;
+                const newStock = parseInt(input.value) || 0;
+
+                const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
+                const docRef = doc(db, SECRET_KEY, docId);
+                
+                const data = {
+                    seccion,
+                    prenda,
+                    variante: variante || '',
+                    talla,
+                    stockAlmacen: newStock
+                };
+                batch.set(docRef, data, { merge: true });
+            });
+
+            try {
+                await batch.commit();
+                showModal('¡Guardado!', 'El stock se ha actualizado correctamente.');
+            } catch (error) {
+                console.error("Error en carga masiva: ", error);
+                showModal('Error', 'No se pudo guardar el stock.', 'error');
+            } finally {
+                btnBulkSave.disabled = false;
+                btnBulkSave.innerHTML = 'Guardar Cambios';
+            }
+        });
+
+        // Inicialización
+        populateBulkProductSelect();
         goToScreen('screen-inicio');
+        seleccion.historial = ['screen-inicio'];
 
     </script>
 </body>
