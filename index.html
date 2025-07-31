@@ -181,7 +181,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, writeBatch, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, writeBatch, addDoc, query, orderBy, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyD1Zujz9sNiG7GYLkv5wUFWOPDIbF6DrBU",
@@ -472,58 +472,59 @@
             const docRef = doc(db, SECRET_KEY, docId);
             
             try {
-                const docSnap = await getDoc(docRef);
-                const stockActual = docSnap.exists() ? docSnap.data() : { stockAlmacen: 0, stockVP: 0, stockPII: 0 };
-                
-                let datosActualizados = { ...stockActual };
-                let resumen = {};
+                await runTransaction(db, async (transaction) => {
+                    const docSnap = await transaction.get(docRef);
+                    const stockActual = docSnap.exists() ? docSnap.data() : { stockAlmacen: 0, stockVP: 0, stockPII: 0 };
+                    
+                    let datosActualizados = { ...stockActual };
+                    let resumen = {};
 
-                if (!esSalida) {
-                    resumen = {
-                        lugar: 'Almacén',
-                        stockAnterior: stockActual.stockAlmacen || 0,
-                        stockNuevo: (stockActual.stockAlmacen || 0) + cantidad
-                    };
-                    datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) + cantidad;
-                } else {
-                    if (!currentSelection.destino) {
-                        showModal('Error', 'Debes seleccionar un destino para la salida.', false);
-                        confirmBtn.disabled = false;
-                        confirmBtn.innerHTML = 'Confirmar Movimiento';
-                        return;
+                    if (!esSalida) {
+                        resumen = {
+                            lugar: 'Almacén',
+                            stockAnterior: stockActual.stockAlmacen || 0,
+                            stockNuevo: (stockActual.stockAlmacen || 0) + cantidad
+                        };
+                        datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) + cantidad;
+                    } else {
+                        if (!currentSelection.destino) {
+                            throw new Error('Debes seleccionar un destino para la salida.');
+                        }
+                        const stockDestinoKey = currentSelection.destino === 'tiendaVP' ? 'stockVP' : 'stockPII';
+                        resumen = {
+                            lugar: currentSelection.destino === 'tiendaVP' ? 'Tienda VP' : 'Tienda PII',
+                            stockAnterior: stockActual[stockDestinoKey] || 0,
+                            stockNuevo: (stockActual[stockDestinoKey] || 0) + cantidad
+                        };
+                        datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) - cantidad;
+                        datosActualizados[stockDestinoKey] = (stockActual[stockDestinoKey] || 0) + cantidad;
                     }
-                    const stockDestinoKey = currentSelection.destino === 'tiendaVP' ? 'stockVP' : 'stockPII';
-                    resumen = {
-                        lugar: currentSelection.destino === 'tiendaVP' ? 'Tienda VP' : 'Tienda PII',
-                        stockAnterior: stockActual[stockDestinoKey] || 0,
-                        stockNuevo: (stockActual[stockDestinoKey] || 0) + cantidad
+
+                    const finalData = {
+                        seccion: currentSelection.seccion, prenda: currentSelection.prenda, variante: currentSelection.variante || '', talla: currentSelection.talla,
+                        ...datosActualizados
                     };
-                    datosActualizados.stockAlmacen = (stockActual.stockAlmacen || 0) - cantidad;
-                    datosActualizados[stockDestinoKey] = (stockActual[stockDestinoKey] || 0) + cantidad;
-                }
+                    
+                    transaction.set(docRef, finalData);
+                    
+                    // Guardar en historial
+                    const historyRef = doc(collection(db, HISTORY_COLLECTION));
+                    transaction.set(historyRef, {
+                        ...currentSelection,
+                        cantidad: cantidad,
+                        tipo: esSalida ? 'salida' : 'entrada',
+                        timestamp: serverTimestamp()
+                    });
 
-                const finalData = {
-                    seccion: currentSelection.seccion, prenda: currentSelection.prenda, variante: currentSelection.variante || '', talla: currentSelection.talla,
-                    ...datosActualizados
-                };
-                
-                await setDoc(docRef, finalData);
-                
-                // Guardar en historial
-                const historyData = {
-                    ...currentSelection,
-                    cantidad: cantidad,
-                    tipo: esSalida ? 'salida' : 'entrada',
-                    timestamp: serverTimestamp()
-                };
-                await addDoc(collection(db, HISTORY_COLLECTION), historyData);
+                    showSummaryModal(currentSelection, cantidad, esSalida, resumen);
+                });
 
-                showSummaryModal(currentSelection, cantidad, esSalida, resumen);
                 resetApp();
 
             } catch (error) {
                 console.error("Error al actualizar el documento: ", error);
-                showModal('Error', 'No se pudo registrar el movimiento.', false);
+                showModal('Error', `No se pudo registrar el movimiento. ${error.message}`, false);
+            } finally {
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = 'Confirmar Movimiento';
             }
