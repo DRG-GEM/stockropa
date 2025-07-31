@@ -195,6 +195,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const SECRET_KEY = "stock-cooperativa-2a8b3c4d-1e9f-4b2c-8d7e-5f6a7b8c9d0e";
+        const HISTORY_COLLECTION = "history";
 
         const productos = {
           "Guardería": { "Babi": { tallas: ["00", "0", "1", "2", "3"] }, "Camiseta": { "Manga Corta": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Manga Larga": { tallas: ["00", "0", "1", "2", "3", "4"] } }, "Pantalón": { "Corto": { tallas: ["0", "1", "2", "3", "4", "6"] }, "Largo": { tallas: ["00", "0", "1", "2", "3", "4", "6"] } }, "Malla": { tallas: ["00", "0", "1", "2", "3"] }, "Chaqueta": { tallas: ["00", "0", "1", "2", "3", "4"] }, "Chándal": { tallas: ["3", "4"] } },
@@ -214,7 +215,7 @@
             "Sueter": "https://i.imgur.com/example.png",
             "Babi infantil": "https://i.imgur.com/example.png",
             "Sport": "https://i.imgur.com/example.png",
-            "Malla Sport": "https://i.imgur.com/example.png",
+            "Malla Sport": "https://skollsports.com/855-superlarge_default/mallas-largas-mujer-yoga-granate.jpg",
             "Sudadera": "https://i.imgur.com/example.png",
             "Leotardos": "https://i.imgur.com/example.png",
             "Calcetines": "https://i.imgur.com/example.png",
@@ -515,7 +516,7 @@
                     tipo: esSalida ? 'salida' : 'entrada',
                     timestamp: serverTimestamp()
                 };
-                await addDoc(collection(db, SECRET_KEY, 'history'), historyData);
+                await addDoc(collection(db, SECRET_KEY, HISTORY_COLLECTION), historyData);
 
                 showSummaryModal(currentSelection, cantidad, esSalida, resumen);
                 resetApp();
@@ -645,7 +646,7 @@
             renderStockTable(stockData);
         });
 
-        const historyQuery = query(collection(db, SECRET_KEY, 'history'), orderBy('timestamp', 'desc'));
+        const historyQuery = query(collection(db, SECRET_KEY, HISTORY_COLLECTION), orderBy('timestamp', 'desc'));
         onSnapshot(historyQuery, (querySnapshot) => {
             const historyData = [];
             querySnapshot.forEach((doc) => {
@@ -755,4 +756,4 @@
 
     </script>
 </body>
-</ht
+</html>
