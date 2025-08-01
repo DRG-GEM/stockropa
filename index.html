@@ -42,15 +42,13 @@
         <!-- Cabecera y Navegación -->
         <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
             <div class="flex items-center gap-3">
-                <div class="bg-sky-500 text-white p-2 rounded-lg">
-                    <i class="fas fa-boxes-stacked"></i>
-                </div>
+                <img id="coop-logo" src="https://web.virgendelpasico.net/wp-content/uploads/2024/01/cropped-ncoop-scaled-1-300x253.jpg" alt="Logo Cooperativa" class="h-10 w-10 rounded-lg">
                 <h1 class="text-xl md:text-2xl font-bold text-slate-700">Gestión de Stock</h1>
             </div>
             <div id="nav-buttons" class="flex gap-2 text-sm">
                  <button id="btn-inicio" class="bg-sky-500 text-white px-3 py-2 rounded-lg font-semibold hover:bg-sky-600 transition-colors">Registrar</button>
                  <button id="btn-ver-stock" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Stock</button>
-                 <button id="btn-carga-masiva" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Carga</button>
+                 <button id="btn-importar" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Importar</button>
                  <button id="btn-historial" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Historial</button>
                  <button id="btn-stats" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-300 transition-colors">Stats</button>
             </div>
@@ -100,7 +98,7 @@
 
             <!-- Pantalla de Ver Stock -->
             <div id="screen-stock" class="screen">
-                 <h2 class="text-2xl font-bold mb-4">Inventario Actual</h2>
+                 <h2 class="text-2xl font-bold mb-4">Inventario del Almacén</h2>
                  <div class="flex justify-between items-center mb-4">
                     <input type="text" id="stock-search" placeholder="Buscar prenda..." class="p-2 border border-slate-300 rounded-lg w-1/2">
                     <button id="btn-export-csv" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors">
@@ -112,30 +110,21 @@
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                             <tr>
                                 <th scope="col" class="px-4 py-3 text-left whitespace-nowrap">Prenda</th>
-                                <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">Almacén</th>
-                                <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">Tienda VP</th>
-                                <th scope="col" class="px-4 py-3 text-center whitespace-nowrap">Tienda PII</th>
-                                <th scope="col" class="px-4 py-3 text-center font-bold whitespace-nowrap">Total</th>
+                                <th scope="col" class="px-4 py-3 text-center font-bold whitespace-nowrap">Stock en Almacén</th>
                             </tr>
                         </thead>
                         <tbody id="stock-table-body"></tbody>
                     </table>
                  </div>
-                 <p class="text-xs text-slate-400 text-right mt-2 md:hidden">← Desliza la tabla para ver más →</p>
             </div>
 
-            <!-- Pantalla de Carga Masiva -->
-            <div id="screen-bulk-load" class="screen">
-                <h2 class="text-2xl font-bold mb-4">Carga Masiva de Stock</h2>
+            <!-- Pantalla de Importar CSV -->
+            <div id="screen-import" class="screen">
+                <h2 class="text-2xl font-bold mb-4">Importar Stock desde CSV</h2>
                 <div class="bg-white p-6 rounded-xl shadow-md">
-                    <div class="mb-4">
-                        <label for="bulk-product-select" class="block text-sm font-medium text-slate-700 mb-1">Selecciona una Prenda</label>
-                        <select id="bulk-product-select" class="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                            <option value="">-- Elige un producto --</option>
-                        </select>
-                    </div>
-                    <div id="bulk-load-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6"></div>
-                    <button id="btn-bulk-save" class="w-full mt-6 bg-green-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-green-700 transition-transform transform hover:scale-105 disabled:bg-slate-300 disabled:cursor-not-allowed" disabled>Guardar Cambios</button>
+                    <p class="text-sm text-slate-600 mb-4">Sube un archivo `.csv` con tu inventario. El archivo debe tener las columnas: `Seccion,Prenda,Variante,Talla,StockAlmacen`.</p>
+                    <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"/>
+                    <button id="btn-import-confirm" class="w-full mt-6 bg-green-600 text-white p-4 rounded-lg font-bold text-lg hover:bg-green-700 disabled:bg-slate-300" disabled>Cargar Inventario</button>
                 </div>
             </div>
 
@@ -255,7 +244,7 @@
         // Elementos de Navegación y Pantallas
         const btnInicio = document.getElementById('btn-inicio');
         const btnVerStock = document.getElementById('btn-ver-stock');
-        const btnCargaMasiva = document.getElementById('btn-carga-masiva');
+        const btnImportar = document.getElementById('btn-importar');
         const btnHistorial = document.getElementById('btn-historial');
         const btnStats = document.getElementById('btn-stats');
         const seccionSelector = document.getElementById('seccion-selector');
@@ -275,6 +264,8 @@
         const btnTabTopProducts = document.getElementById('btn-tab-top-products');
         const statsLowStockContainer = document.getElementById('stats-low-stock');
         const statsTopProductsContainer = document.getElementById('stats-top-products');
+        const csvFileInput = document.getElementById('csv-file-input');
+        const btnImportConfirm = document.getElementById('btn-import-confirm');
 
         function goToScreen(screenId) {
             screens.forEach(s => s.classList.remove('active'));
@@ -284,8 +275,8 @@
             btnInicio.classList.toggle('bg-slate-200', screenId !== 'screen-registro');
             btnVerStock.classList.toggle('bg-sky-500', screenId === 'screen-stock');
             btnVerStock.classList.toggle('bg-slate-200', screenId !== 'screen-stock');
-            btnCargaMasiva.classList.toggle('bg-sky-500', screenId === 'screen-bulk-load');
-            btnCargaMasiva.classList.toggle('bg-slate-200', screenId !== 'screen-bulk-load');
+            btnImportar.classList.toggle('bg-sky-500', screenId === 'screen-import');
+            btnImportar.classList.toggle('bg-slate-200', screenId !== 'screen-import');
             btnHistorial.classList.toggle('bg-sky-500', screenId === 'screen-history');
             btnHistorial.classList.toggle('bg-slate-200', screenId !== 'screen-history');
             btnStats.classList.toggle('bg-sky-500', screenId === 'screen-stats');
@@ -375,7 +366,7 @@
                     <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Movimiento</label>
                     <div class="grid grid-cols-2 gap-3">
                         <button id="detail-btn-entrada" class="movimiento-tipo-btn p-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-semibold"><i class="fas fa-plus mr-2"></i>Entrada Almacén</button>
-                        <button id="detail-btn-salida" class="movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold"><i class="fas fa-minus mr-2"></i>Salida a Tienda</button>
+                        <button id="detail-btn-salida" class="movimiento-tipo-btn p-3 rounded-lg border-2 border-slate-300 text-slate-500 font-semibold"><i class="fas fa-minus mr-2"></i>Salida</button>
                     </div>
                 </div>
                 <div id="detail-destino-container" class="hidden">
@@ -618,7 +609,7 @@
         // Navegación principal
         btnInicio.addEventListener('click', () => { resetApp(); });
         btnVerStock.addEventListener('click', () => { goToScreen('screen-stock'); });
-        btnCargaMasiva.addEventListener('click', () => { goToScreen('screen-bulk-load'); });
+        btnImportar.addEventListener('click', () => { goToScreen('screen-import'); });
         btnHistorial.addEventListener('click', () => { goToScreen('screen-history'); });
         btnStats.addEventListener('click', () => {
             renderStats();
@@ -630,7 +621,7 @@
             const tableBody = document.getElementById('stock-table-body');
             tableBody.innerHTML = '';
             if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-8">No hay datos de stock.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="2" class="text-center p-8">No hay datos de stock.</td></tr>';
                 return;
             }
             data.sort((a, b) => {
@@ -642,12 +633,11 @@
                 return a.talla.localeCompare(b.talla);
             });
             data.forEach(item => {
-                const total = (item.stockAlmacen || 0) + (item.stockVP || 0) + (item.stockPII || 0);
                 const nombreCompleto = `${item.prenda} ${item.variante || ''} - Talla: ${item.talla}`;
                 const stockAlmacen = item.stockAlmacen || 0;
                 const stockClass = stockAlmacen < LOW_STOCK_THRESHOLD ? 'text-red-500 font-bold' : '';
 
-                const row = `<tr class="bg-white border-b hover:bg-slate-50"><th scope="row" class="px-4 py-4 font-medium text-slate-900 whitespace-nowrap"><span class="block">${nombreCompleto}</span><span class="block text-xs text-slate-400">${item.seccion}</span></th><td class="px-4 py-4 text-center ${stockClass}">${stockAlmacen}</td><td class="px-4 py-4 text-center">${item.stockVP || 0}</td><td class="px-4 py-4 text-center">${item.stockPII || 0}</td><td class="px-4 py-4 text-center font-bold text-slate-800">${total}</td></tr>`;
+                const row = `<tr class="bg-white border-b hover:bg-slate-50"><th scope="row" class="px-4 py-4 font-medium text-slate-900 whitespace-nowrap"><span class="block">${nombreCompleto}</span><span class="block text-xs text-slate-400">${item.seccion}</span></th><td class="px-4 py-4 text-center ${stockClass}">${stockAlmacen}</td></tr>`;
                 tableBody.innerHTML += row;
             });
         }
@@ -733,103 +723,71 @@
             renderHistoryTable(historyData);
         });
 
-        // --- CÓDIGO DE CARGA MASIVA Y OTROS ---
+        // --- CÓDIGO DE IMPORTACIÓN Y OTROS ---
         const stockSearchInput = document.getElementById('stock-search');
         const btnExportCSV = document.getElementById('btn-export-csv');
-        const bulkProductSelect = document.getElementById('bulk-product-select');
-        const bulkLoadGrid = document.getElementById('bulk-load-grid');
-        const btnBulkSave = document.getElementById('btn-bulk-save');
-
-        stockSearchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredData = stockData.filter(item => `${item.seccion} ${item.prenda} ${item.variante || ''} ${item.talla}`.toLowerCase().includes(searchTerm));
-            renderStockTable(filteredData);
-        });
         
         btnExportCSV.addEventListener('click', () => {
-            let csvContent = "data:text/csv;charset=utf-8,Seccion,Prenda,Variante,Talla,Stock Almacen,Stock Tienda VP,Stock Tienda PII,Total\n";
+            let csvContent = "data:text/csv;charset=utf-8,Seccion,Prenda,Variante,Talla,StockAlmacen\n";
             stockData.forEach(item => {
-                const total = (item.stockAlmacen || 0) + (item.stockVP || 0) + (item.stockPII || 0);
-                const row = [item.seccion, item.prenda, item.variante || '', item.talla, item.stockAlmacen || 0, item.stockVP || 0, item.stockPII || 0, total].join(",");
+                const row = [item.seccion, item.prenda, item.variante || '', item.talla, item.stockAlmacen || 0].join(",");
                 csvContent += row + "\n";
             });
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI(csvContent));
-            link.setAttribute("download", "inventario_cooperativa.csv");
+            link.setAttribute("download", "inventario_almacen.csv");
             link.click();
         });
-        
-        function populateBulkProductSelect() {
-            for (const seccion in productos) {
-                for (const prenda in productos[seccion]) {
-                    const item = productos[seccion][prenda];
-                    if (item.tallas) {
-                        const option = document.createElement('option');
-                        option.value = `${seccion}|${prenda}`;
-                        option.textContent = `${seccion} - ${prenda}`;
-                        bulkProductSelect.appendChild(option);
-                    } else {
-                        for (const variante in item) {
-                            const option = document.createElement('option');
-                            option.value = `${seccion}|${prenda}|${variante}`;
-                            option.textContent = `${seccion} - ${prenda} (${variante})`;
-                            bulkProductSelect.appendChild(option);
-                        }
-                    }
-                }
-            }
-        }
 
-        bulkProductSelect.addEventListener('change', async (e) => {
-            const value = e.target.value;
-            bulkLoadGrid.innerHTML = '<div class="col-span-full text-center"><i class="fas fa-spinner fa-spin text-2xl text-sky-500"></i></div>';
-            btnBulkSave.disabled = true;
-            if (!value) { bulkLoadGrid.innerHTML = ''; return; }
-
-            const [seccion, prenda, variante] = value.split('|');
-            const item = variante ? productos[seccion][prenda][variante] : productos[seccion][prenda];
-            
-            bulkLoadGrid.innerHTML = '';
-            for (const talla of item.tallas) {
-                const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
-                const docSnap = await getDoc(doc(db, SECRET_KEY, docId));
-                const currentStock = docSnap.exists() ? docSnap.data().stockAlmacen || 0 : 0;
-                bulkLoadGrid.innerHTML += `<div><label class="block text-sm font-medium text-slate-700 mb-1">${talla}</label><input type="number" min="0" value="${currentStock}" class="w-full p-2 border border-slate-300 rounded-lg" data-talla="${talla}"></div>`;
-            }
-            btnBulkSave.disabled = false;
+        csvFileInput.addEventListener('change', () => {
+            btnImportConfirm.disabled = !csvFileInput.files.length;
         });
 
-        btnBulkSave.addEventListener('click', async () => {
-            const value = bulkProductSelect.value;
-            if (!value) return;
-            btnBulkSave.disabled = true;
-            btnBulkSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        btnImportConfirm.addEventListener('click', async () => {
+            const file = csvFileInput.files[0];
+            if (!file) return;
 
-            const [seccion, prenda, variante] = value.split('|');
-            const batch = writeBatch(db);
+            btnImportConfirm.disabled = true;
+            btnImportConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
 
-            bulkLoadGrid.querySelectorAll('input').forEach(input => {
-                const talla = input.dataset.talla;
-                const newStock = parseInt(input.value) || 0;
-                const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
-                const data = { seccion, prenda, variante: variante || '', talla, stockAlmacen: newStock };
-                batch.set(doc(db, SECRET_KEY, docId), data, { merge: true });
-            });
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const csv = event.target.result;
+                const lines = csv.split('\n').slice(1); // Omitir cabecera
+                const batch = writeBatch(db);
 
-            try {
-                await batch.commit();
-                showModal('¡Guardado!', 'El stock se ha actualizado correctamente.');
-            } catch (error) {
-                console.error("Error en carga masiva: ", error);
-                showModal('Error', 'No se pudo guardar el stock.', false);
-            } finally {
-                btnBulkSave.disabled = false;
-                btnBulkSave.innerHTML = 'Guardar Cambios';
-            }
+                lines.forEach(line => {
+                    if (!line) return;
+                    const [seccion, prenda, variante, talla, stockAlmacen] = line.split(',');
+                    const docId = `${seccion}_${prenda}_${variante || ''}_${talla}`.replace(/\s+/g, '_').replace(/__/g, '_');
+                    const docRef = doc(db, SECRET_KEY, docId);
+                    
+                    const data = {
+                        seccion: seccion.trim(),
+                        prenda: prenda.trim(),
+                        variante: variante.trim() || '',
+                        talla: talla.trim(),
+                        stockAlmacen: parseInt(stockAlmacen) || 0
+                    };
+                    batch.set(docRef, data, { merge: true });
+                });
+
+                try {
+                    await batch.commit();
+                    showModal('¡Importado!', 'El inventario se ha cargado correctamente.');
+                } catch (error) {
+                    console.error("Error en importación masiva: ", error);
+                    showModal('Error', 'No se pudo cargar el inventario.', false);
+                } finally {
+                    btnImportConfirm.disabled = false;
+                    btnImportConfirm.innerHTML = 'Cargar Inventario';
+                    csvFileInput.value = '';
+                }
+            };
+            reader.readAsText(file);
         });
 
         // Inicialización
-        populateBulkProductSelect();
         goToScreen('screen-registro');
 
         // Stats Tabs Logic
